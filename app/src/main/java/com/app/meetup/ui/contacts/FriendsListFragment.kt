@@ -1,4 +1,4 @@
-package com.app.meetup.ui.friends
+package com.app.meetup.ui.contacts
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.*
-import com.app.meetup.ui.friends.customviews.FriendsListRecyclerAdapter
+import com.app.meetup.ui.contacts.customviews.FriendsListRecyclerAdapter
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
 class FriendsListFragment : Fragment() {

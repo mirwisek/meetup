@@ -12,10 +12,10 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_friends"
-        android:name="com.app.meetup.ui.friends.FriendsFragment"
-        android:label="@string/title_friends"
-        tools:layout="@layout/fragment_friends" />
+        android:id="@+id/navigation_contacts"
+        android:name="com.app.meetup.ui.contacts.ContactsFragment"
+        android:label="@string/title_contacts"
+        tools:layout="@layout/fragment_contacts" />
 
     <fragment
         android:id="@+id/navigation_notifications"

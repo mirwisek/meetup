@@ -1,14 +1,14 @@
-package com.app.meetup.ui.friends.customviews
+package com.app.meetup.ui.contacts.customviews
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.app.meetup.ui.friends.FriendsListFragment
-import com.app.meetup.ui.friends.FriendsPendingRequestsFragment
-import com.app.meetup.ui.friends.FriendsRequestsFragment
+import com.app.meetup.ui.contacts.FriendsListFragment
+import com.app.meetup.ui.contacts.FriendsPendingRequestsFragment
+import com.app.meetup.ui.contacts.FriendsRequestsFragment
 
-class FriendsViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) :
+class ContactsViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) :
     FragmentStateAdapter(fragmentManager, lifecycle) {
 
     override fun getItemCount(): Int {

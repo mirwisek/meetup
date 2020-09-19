@@ -1,4 +1,4 @@
-package com.app.meetup.ui.friends.customviews
+package com.app.meetup.ui.contacts.customviews
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -6,12 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.app.meetup.*
-import com.app.meetup.getColorCompat
-import com.google.android.material.button.MaterialButton
 
 class FriendsRequestRecyclerAdapter(context: Context): RecyclerView.Adapter<FriendsRequestRecyclerAdapter.ViewHolder>() {
 

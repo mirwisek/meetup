@@ -1,4 +1,4 @@
-package com.app.meetup.ui.friends.customviews
+package com.app.meetup.ui.contacts.customviews
 
 import android.annotation.SuppressLint
 import android.content.Context

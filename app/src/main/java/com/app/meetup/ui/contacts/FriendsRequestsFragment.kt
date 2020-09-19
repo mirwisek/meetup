@@ -1,4 +1,4 @@
-package com.app.meetup.ui.friends
+package com.app.meetup.ui.contacts
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -7,10 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.*
-import com.app.meetup.ui.friends.customviews.FriendsListRecyclerAdapter
+import com.app.meetup.ui.contacts.customviews.FriendsRequestRecyclerAdapter
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
-class FriendsPendingRequestsFragment : Fragment() {
+class FriendsRequestsFragment : Fragment() {
 
     private lateinit var vmActivity: ActivityViewModel
 
@@ -28,26 +28,36 @@ class FriendsPendingRequestsFragment : Fragment() {
 
         vmActivity = ViewModelProvider(requireActivity()).get(ActivityViewModel::class.java)
 
-        val adapter = FriendsListRecyclerAdapter(requireContext())
+
+        val adapter = FriendsRequestRecyclerAdapter(requireContext())
         view.rvFriendsList.adapter = adapter
 
-        vmActivity.requestSent.observe(viewLifecycleOwner, {
+        vmActivity.friendRequests.observe(viewLifecycleOwner, {
             it?.let { accounts ->
                 adapter.updateList(accounts)
+                if(accounts.isNotEmpty()) {
+
+                }
             }
         })
 
-        adapter.setOnRequestReactionListener(object: FriendsListRecyclerAdapter.OnRequestReaction {
+        adapter.setOnReactionListener(object: FriendsRequestRecyclerAdapter.OnRequestInteraction {
 
-            override fun onRequestCancelled(account: Account, index: Int) {
-
-                FirestoreUtils.cancelPendingRequest(getPhoneNoFormatted(), account.profile.phoneNo)
+            override fun onAccepted(account: Account) {
+                FirestoreUtils.acceptFriendRequest(getPhoneNoFormatted(), account.profile.phoneNo)
                     .addOnFailureListener {
-                        toastFrag("Couldn't cancel request, try again later.")
+                        toastFrag("Couldn't accept friend request at the moment, please try again later")
                         it.printStackTrace()
                     }
             }
 
+            override fun onRejected(account: Account) {
+                FirestoreUtils.declineFriendRequest(getPhoneNoFormatted(), account.profile.phoneNo)
+                    .addOnFailureListener {
+                        toastFrag("Couldn't decline friend request at the moment, please try again later")
+                        it.printStackTrace()
+                    }
+            }
         })
     }
 
