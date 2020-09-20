@@ -70,4 +70,8 @@ dependencies {
     // Places API
     implementation 'com.google.android.libraries.places:places:2.4.0'
 
+
+    // Date and Time library
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.2.4'
+
 }

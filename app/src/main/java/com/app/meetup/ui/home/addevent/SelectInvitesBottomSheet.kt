@@ -1,7 +1,6 @@
-package com.app.meetup.ui.home
+package com.app.meetup.ui.home.addevent
 
 import android.annotation.SuppressLint
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +8,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.Invite
 import com.app.meetup.R
+import com.app.meetup.ui.home.customviews.BaseBottomSheet
 import com.app.meetup.ui.home.customviews.InviteSelectionAdapter
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.bottom_sheet_invite_selection.view.*

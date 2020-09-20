@@ -1,17 +1,10 @@
-package com.app.meetup.ui.home
+package com.app.meetup.ui.home.addevent
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
-import android.location.LocationProvider
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
-import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
-import androidx.lifecycle.ViewModelProvider
-import com.app.meetup.ActivityViewModel
-import com.app.meetup.MainActivity
 import com.app.meetup.R
 import com.app.meetup.utils.*
 import com.google.android.gms.common.api.Status
@@ -24,8 +17,10 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.TypeFilter
+import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 
@@ -35,7 +30,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var location: LatLng? = null
     private lateinit var locationProvider: FusedLocationProviderClient
     private val callback = getLocationCallback()
-    private lateinit var eventFragment: EventFragment
+    private lateinit var addEventFragment: AddEventFragment
 
     companion object {
         const val RC_NEW_EVENT = 125
@@ -54,11 +49,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             supportFragmentManager.findFragmentById(R.id.autocomplete_fragment)
                     as AutocompleteSupportFragment
 
-        eventFragment = (supportFragmentManager.findFragmentByTag(EventFragment.TAG)
-            ?: EventFragment()) as EventFragment
+        addEventFragment = (supportFragmentManager.findFragmentByTag(AddEventFragment.TAG)
+            ?: AddEventFragment()) as AddEventFragment
 
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.events_fragment, eventFragment)
+            replace(R.id.events_fragment, addEventFragment)
             commit()
         }
 
@@ -71,8 +66,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         autocompleteFragment.setPlaceFields(
             listOf(Place.Field.ID, Place.Field.NAME,
                 Place.Field.ADDRESS,
-                Place.Field.LAT_LNG,
-                Place.Field.PHOTO_METADATAS
+                Place.Field.LAT_LNG
             )
         )
 
@@ -80,10 +74,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
 
-                log("Place: ${place.name}, ${place.address}, ${place.photoMetadatas}")
                 navigateToLocation(place.latLng!!)
                 dropMarker(place.latLng!!)
-                eventFragment.onPlaceSelected(place)
+                addEventFragment.onPlaceSelected(place)
             }
 
             override fun onError(status: Status) {

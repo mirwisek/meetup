@@ -1,5 +1,6 @@
 package com.app.meetup.utils
 
+import com.app.meetup.ui.home.models.FirestoreEvent
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
@@ -23,10 +24,8 @@ object FirestoreUtils {
         return db.collection("users").document(phoneNo)
     }
 
-    fun getProfiles(phoneNo: String): CollectionReference {
+    fun getProfiles(): CollectionReference {
         return db.collection("profiles")
-//            .whereIn("phoneNo", phoneNumbers)
-//            .orderBy("name").get()
     }
 
     fun unFriend(phoneNo: String, targetPhoneNo: String): Task<Task<Void>> {
@@ -85,4 +84,36 @@ object FirestoreUtils {
             null
         }
     }
+
+    fun getEvents(): CollectionReference {
+        return db.collection("events")
+    }
+
+    fun queryEvents(eventsIds: List<String>): Query {
+        return db.collection("events")
+            .whereIn(FieldPath.documentId(), eventsIds)
+    }
+
+    fun addEvent(phoneNo: String, firestoreEvent: FirestoreEvent): Task<Task<Void>> {
+        val source = getUserData(phoneNo)
+
+        return db.runTransaction { trans ->
+
+            val eventDoc = trans.get(getEvents().document())
+            val id = eventDoc.id
+
+            trans.set(getEvents().document(id), firestoreEvent)
+
+            firestoreEvent.invites.forEach { invitePhone ->
+                val target = getUserData(invitePhone)
+                trans.update(target, "eventsInvitation", FieldValue.arrayUnion(id))
+            }
+
+            trans.update(source, "eventsUpcoming", FieldValue.arrayUnion(id))
+
+            null
+        }
+    }
+
+
 }

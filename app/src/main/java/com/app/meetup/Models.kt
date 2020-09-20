@@ -13,6 +13,9 @@ data class Account(
 )
 
 data class UserData(
+    var eventsInvitation: List<String> = mutableListOf(),
+    var eventsOnGoing: List<String> = mutableListOf(),
+    var eventsUpcoming: List<String> = mutableListOf(),
     var friends: List<String> = mutableListOf(),
     var requestSent: List<String> = mutableListOf(),
     var friendRequests: List<String> = mutableListOf()

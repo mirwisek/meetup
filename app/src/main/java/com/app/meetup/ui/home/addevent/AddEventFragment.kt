@@ -1,38 +1,57 @@
-package com.app.meetup.ui.home
+package com.app.meetup.ui.home.addevent
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.Invite
+import com.app.meetup.Profile
 import com.app.meetup.R
-import com.app.meetup.utils.Constants
-import com.app.meetup.utils.gone
-import com.app.meetup.utils.visible
+import com.app.meetup.ui.home.getFormatted
+import com.app.meetup.ui.home.models.FirestoreEvent
+import com.app.meetup.ui.home.models.Venue
+import com.app.meetup.ui.home.models.Vote
+import com.app.meetup.ui.home.toGeoPoint
+import com.app.meetup.ui.home.toTimestamp
+import com.app.meetup.utils.*
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.Place
+import com.google.firebase.Timestamp
 import kotlinx.android.synthetic.main.fragment_event.*
 import kotlinx.android.synthetic.main.fragment_event.view.*
+import org.threeten.bp.*
 import java.util.*
 import kotlin.collections.ArrayList
 
-class EventFragment : Fragment() {
+class AddEventFragment : Fragment() {
 
     companion object {
         const val TAG = "eventFragment"
     }
 
     private val bottomSheet = SelectInvitesBottomSheet()
-    private var invitesPhoneOnly: ArrayList<String>? = null
-    private var eventStartTime: String? = null
-    private var eventEndTime: String? = null
     private lateinit var vmBottomSheet: BottomSheetViewModel
+
+
+    private var invitesPhoneOnly: List<String> = mutableListOf()
+
+//    private var eventStartTime: LocalTime? = null
+//    private var eventEndTime: LocalTime? = null
+    private var eventStartDate: LocalDate? = null
+    private var eventEndDate: LocalDate? = null
+
+    private var eventStart: LocalDateTime? = null
+    private var eventEnd: LocalDateTime? = null
+
+    private var venue: Venue? = null
+
     private var isAddressSet = false
 
     override fun onCreateView(
@@ -72,74 +91,95 @@ class EventFragment : Fragment() {
             }
         })
 
-        val timeNow = Calendar.getInstance()
-        val hour = timeNow.get(Calendar.HOUR_OF_DAY)
-        val min = timeNow.get(Calendar.MINUTE)
-
         view.btnConfirm.isEnabled = false
+
+        val today = LocalDateTime.now()
+
 
         val eventStartTimePicker = TimePickerDialog(
             requireContext(),
-            { v, hourOfDay, minute ->
-                var p = "AM"
-                var finalHour = hourOfDay
-                if (hourOfDay > 12) {
-                    finalHour = hourOfDay - 12
-                    p = "PM"
-                }
-                eventStartTime = "$finalHour:$minute $p"
-                btnStartTime.text = eventStartTime
+            { _, hourOfDay, minute ->
+                val eventStartTime = LocalTime.of(hourOfDay, minute)
+                eventStart = LocalDateTime.of(eventStartDate!!, eventStartTime)
+                btnStartTime.text = eventStart!!.getFormatted()
                 enableConfirmIfAllSet()
 
-            }, hour, min, false
+            }, today.hour, today.minute, false
         )
 
         val eventEndTimePicker = TimePickerDialog(
             requireContext(),
-            { v, hourOfDay, minute ->
-                var p = "AM"
-                var finalHour = hourOfDay
-                if (hourOfDay > 12) {
-                    finalHour = hourOfDay - 12
-                    p = "PM"
-                }
-                eventEndTime = "$finalHour:$minute $p"
-                btnEndTime.text = eventEndTime
+            { _, hourOfDay, minute ->
+                val eventEndTime = LocalTime.of(hourOfDay, minute)
+                eventEnd = LocalDateTime.of(eventStartDate!!, eventEndTime)
+                btnEndTime.text = eventEnd!!.getFormatted()
                 enableConfirmIfAllSet()
-            }, hour, min, false
+            }, today.hour, today.minute, false
         )
 
+        val startDatePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+            eventStartDate = LocalDate.of(year, month, dayOfMonth)
+            eventStartTimePicker.show()
+        }, today.year, today.monthValue, today.dayOfMonth)
+
+        val endDatePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+            eventEndDate = LocalDate.of(year, month, dayOfMonth)
+            eventEndTimePicker.show()
+        }, today.year, today.monthValue, today.dayOfMonth)
+
+        startDatePicker.setTitle("Event Start Date")
+        endDatePicker.setTitle("Event End Date")
         eventEndTimePicker.setTitle("Event End Time")
         eventStartTimePicker.setTitle("Event Starting Time")
 
         view.btnStartTime.setOnClickListener {
-            eventStartTimePicker.show()
+            startDatePicker.show()
         }
 
         view.btnEndTime.setOnClickListener {
-            eventEndTimePicker.show()
+            endDatePicker.show()
         }
 
         bottomSheet.setOnInviteSelectionListener(object :
             SelectInvitesBottomSheet.OnInviteSelectionListener {
 
             override fun onComplete(list: List<Invite>) {
-                invitesPhoneOnly = ArrayList(list.map { it.profile.phoneNo })
+                invitesPhoneOnly = list.map { it.profile.phoneNo }
                 enableConfirmIfAllSet()
             }
         })
 
         view.btnConfirm.setOnClickListener {
             val intent = Intent()
-            intent.putStringArrayListExtra(Constants.KEY_INVITES_LIST, invitesPhoneOnly)
-            requireActivity().apply {
-                setResult(Activity.RESULT_OK, intent)
-                finish()
+
+            val event = FirestoreEvent(
+                getPhoneNoFormatted()!!,
+                eventStart!!.toTimestamp(),
+                eventEnd!!.toTimestamp(),
+                "Get together with friends",
+                venue!!.id,
+                mutableListOf(venue!!),
+                invitesPhoneOnly,
+                mutableListOf(Vote(venue!!.id, 1)),
+                Timestamp.now()
+            )
+
+            FirestoreUtils.addEvent(getPhoneNoFormatted()!!, event).addOnFailureListener {
+                toastFrag("Couldn't post your event, server error!")
+                it.printStackTrace()
+            }.addOnSuccessListener {
+                requireActivity().apply {
+                    setResult(Activity.RESULT_OK, intent)
+                    finish()
+                }
             }
         }
     }
 
     fun onPlaceSelected(place: Place) {
+
+        venue = Venue(place.id!!, place.name!!, place.address!!, place.latLng!!.toGeoPoint())
+
         locationName.text = place.name
         address.text = place.address
         locationName.visible()
@@ -153,8 +193,8 @@ class EventFragment : Fragment() {
         btnConfirm.isEnabled =
             when {
                 !invitesPhoneOnly.isNullOrEmpty() &&
-                eventStartTime != null &&
-                eventEndTime != null && isAddressSet -> true
+                eventStart != null &&
+                eventEnd != null && isAddressSet -> true
                 else -> false
             }
     }

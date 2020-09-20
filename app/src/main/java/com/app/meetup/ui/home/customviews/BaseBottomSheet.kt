@@ -1,4 +1,4 @@
-package com.app.meetup.ui.home
+package com.app.meetup.ui.home.customviews
 
 import android.app.Dialog
 import android.os.Build

@@ -1,11 +1,8 @@
-package com.app.meetup.ui.home
+package com.app.meetup.ui.home.addevent
 
-import android.location.Location
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.app.meetup.Invite
-import com.app.meetup.Profile
 import com.app.meetup.repo.Repository
 
 class BottomSheetViewModel : ViewModel() {

@@ -80,7 +80,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
 
     private fun findFriends(phoneNo: String) {
 
-        FirestoreUtils.getProfiles(phoneNo).get().addOnSuccessListener { snap ->
+        FirestoreUtils.getProfiles().get().addOnSuccessListener { snap ->
 
             viewModelScope.launch(Dispatchers.IO) {
                 val phoneList = allContacts.value!!.keys

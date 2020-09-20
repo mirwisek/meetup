@@ -8,14 +8,10 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.app.meetup.Invite
 import com.app.meetup.R
-import com.app.meetup.utils.invisible
 import com.app.meetup.utils.toPx
-import com.app.meetup.utils.visible
-import com.google.android.material.button.MaterialButton
 
 class InviteSelectionAdapter(context: Context): RecyclerView.Adapter<InviteSelectionAdapter.ViewHolder>() {
 

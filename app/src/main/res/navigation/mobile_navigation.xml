@@ -29,7 +29,7 @@
 
     <activity
         android:id="@+id/mapsActivity"
-        android:name="com.app.meetup.ui.home.MapsActivity"
+        android:name="com.app.meetup.ui.home.addevent.MapsActivity"
         android:label="activity_maps"
         tools:layout="@layout/activity_maps" />
 </navigation>
