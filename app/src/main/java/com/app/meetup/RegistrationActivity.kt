@@ -3,6 +3,10 @@ package com.app.meetup
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.app.meetup.utils.FirestoreUtils
+import com.app.meetup.utils.gone
+import com.app.meetup.utils.toast
+import com.app.meetup.utils.visible
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_registration.*
 
@@ -23,7 +27,7 @@ class RegistrationActivity : AppCompatActivity() {
                 val phone = user.phoneNumber!!.replace("+92", "0")
 
                 FirestoreUtils.getProfile(phone).set(
-                    Profile(user.uid, name, phone)
+                    Profile(name, phone)
                 ).continueWith {
                     // Create user data document as well
                     FirestoreUtils.getUserData(phone).set(UserData())

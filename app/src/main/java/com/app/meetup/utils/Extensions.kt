@@ -1,6 +1,8 @@
-package com.app.meetup
+package com.app.meetup.utils
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.location.Location
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
@@ -12,6 +14,12 @@ import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import com.app.meetup.Account
+import com.app.meetup.Profile
+import com.app.meetup.R
+import com.app.meetup.UserData
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.roundToInt
@@ -104,7 +112,60 @@ fun LiveData<UserData>.combineContacts(
     return result
 }
 
-fun getPhoneNoFormatted(): String {
+fun LiveData<UserData>.combineProfilesWithFriends(
+    profiles: LiveData<MutableList<Profile>>,
+    callback: (MutableList<Profile>, UserData) -> MutableList<Profile>
+): LiveData<MutableList<Profile>> {
+
+    val result = MediatorLiveData<MutableList<Profile>>()
+
+    // Will call only when both are not null and set
+    result.addSource(this) {
+        it?.let { userData ->
+            profiles.value?.let { profilesList ->
+                result.value =
+                    callback.invoke(profilesList, userData)
+            }
+        }
+    }
+    result.addSource(profiles) {
+        it?.let { profilesList ->
+            value?.let { userData ->
+                result.value = callback.invoke(profilesList, userData)
+            }
+        }
+    }
+    return result
+}
+
+fun getPhoneNoFormatted(): String? {
     return FirebaseAuth.getInstance()
-        .currentUser!!.phoneNumber!!.replace("+92", "0")
+        .currentUser?.phoneNumber?.replace("+92", "0")
+}
+
+fun Location.toLatLng(): LatLng {
+    return LatLng(latitude, longitude)
+}
+
+fun Location.toText(): String {
+    return "$latitude,$longitude"
+}
+
+fun String.toLatLng(): LatLng {
+    val item = this.split(",")
+    return LatLng(
+        item[0].toDouble(),
+        item[1].toDouble()
+    )
+}
+
+val Context.sharedPref: SharedPreferences
+    get() = getSharedPreferences(getString(R.string.shared_prefs), Context.MODE_PRIVATE)
+
+fun getLocationRequest(): LocationRequest {
+    return LocationRequest.create().apply {
+        interval = 5_000
+        fastestInterval = 3000
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    }
 }

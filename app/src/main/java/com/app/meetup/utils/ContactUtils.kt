@@ -1,15 +1,16 @@
-package com.app.meetup
+package com.app.meetup.utils
 
 import android.content.ContentResolver
-import android.provider.ContactsContract.CommonDataKinds.*
+import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.ContactsContract.Contacts.*
+import com.app.meetup.Profile
 
 object ContactUtils {
 
-    fun getAllContacts(contentResolver: ContentResolver, replaceCountryCode: Boolean): HashMap<String, Contact> {
+    fun getAllContacts(contentResolver: ContentResolver, replaceCountryCode: Boolean): HashMap<String, Profile> {
 
         // using hashmap to avoid duplicate contacts
-        val hashMap = hashMapOf<String, Contact>()
+        val hashMap = hashMapOf<String, Profile>()
 
         val cursor = contentResolver.query(CONTENT_URI, null,
         null, null, null)
@@ -37,7 +38,7 @@ object ContactUtils {
                         else
                             phoneNo
 
-                        hashMap[formattedPhone] = Contact(name, formattedPhone)
+                        hashMap[formattedPhone] = Profile(name, formattedPhone)
                     }
                     phoneCursor?.close()
                 }

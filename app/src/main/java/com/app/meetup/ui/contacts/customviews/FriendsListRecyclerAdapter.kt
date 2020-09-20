@@ -42,7 +42,7 @@ class FriendsListRecyclerAdapter(context: Context): RecyclerView.Adapter<Friends
 //        }
 
         holder.name.text = account.profile.name
-        holder.contactName.text = "${account.contact.name} - ${account.contact.phoneNo}"
+        holder.contactName.text = account.profile.phoneNo
         holder.btnReaction.text = if(account.isFriend)
             ctx.getString(R.string.unfriend)
         else {

@@ -9,7 +9,11 @@
         android:id="@+id/navigation_home"
         android:name="com.app.meetup.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_mapsActivity"
+            app:destination="@id/mapsActivity" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_contacts"
@@ -22,4 +26,10 @@
         android:name="com.app.meetup.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <activity
+        android:id="@+id/mapsActivity"
+        android:name="com.app.meetup.ui.home.MapsActivity"
+        android:label="activity_maps"
+        tools:layout="@layout/activity_maps" />
 </navigation>

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class ContactsViewModel : ViewModel() {
 
-    private val _contactsList = MutableLiveData<HashMap<String, Contact>>()
-    val contactsList: LiveData<HashMap<String, Contact>> = _contactsList
+    private val _contactsList = MutableLiveData<HashMap<String, Profile>>()
+    val contactsList: LiveData<HashMap<String, Profile>> = _contactsList
 
 }

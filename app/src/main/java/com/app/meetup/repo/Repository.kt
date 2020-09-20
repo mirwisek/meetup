@@ -1,41 +1,55 @@
 package com.app.meetup.repo
 
 import android.app.Application
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.app.meetup.FirestoreUtils
+import com.app.meetup.Account
+import com.app.meetup.Profile
+import com.app.meetup.utils.FirestoreUtils
 import com.app.meetup.UserData
-import com.app.meetup.getPhoneNoFormatted
-import com.app.meetup.log
-import com.google.firebase.auth.FirebaseAuth
+import com.app.meetup.utils.combineProfilesWithFriends
+import com.app.meetup.utils.getPhoneNoFormatted
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 class Repository private constructor() :CoroutineScope {
 
     val userData = MutableLiveData<UserData>()
-    private lateinit var application: Application
-    private lateinit var phoneNo: String
+    val profiles = MutableLiveData<MutableList<Profile>>()
+
+    val friends = userData.combineProfilesWithFriends(profiles) { profilesList, userData ->
+
+        val friendsList = mutableListOf<Profile>()
+        profilesList.forEach { profile ->
+            if(userData.friends.any { friend -> friend == profile.phoneNo })
+                friendsList.add(profile)
+        }
+        friendsList
+    }
+
+    private var phoneNo: String? = null
+
+    init {
+        this.phoneNo = getPhoneNoFormatted()
+        fetchData()
+        fetchProfiles()
+    }
 
     companion object {
         private var instance: Repository? = null
 
-        fun getInstance(application: Application): Repository {
+        fun getInstance(): Repository {
 
             if (instance == null)
-                instance = Repository(application)
+                instance = Repository()
             return instance!!
         }
     }
 
-    constructor(application: Application) : this() {
-        this.application = application
-        this.phoneNo = getPhoneNoFormatted()
-
-        fetchData()
-    }
-
-    fun fetchData() {
-        FirestoreUtils.getUserData(phoneNo).addSnapshotListener { snap, ex ->
+    private fun fetchData() {
+        if(phoneNo == null)
+            return
+        FirestoreUtils.getUserData(phoneNo!!).addSnapshotListener { snap, ex ->
             scope.launch {
                 ex?.printStackTrace()
 
@@ -50,9 +64,28 @@ class Repository private constructor() :CoroutineScope {
         }
     }
 
+    private fun fetchProfiles() {
+        if(phoneNo == null)
+            return
+        FirestoreUtils.getProfiles(phoneNo!!).addSnapshotListener { snap, ex ->
+            scope.launch {
+                ex?.printStackTrace()
+
+                snap?.let { doc ->
+                    try {
+                        profiles.postValue(doc.toObjects(Profile::class.java))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
     private val parentJob = Job()
 
     override val coroutineContext: CoroutineContext
         get() = parentJob + Dispatchers.Default
     private val scope = CoroutineScope(coroutineContext)
+
 }

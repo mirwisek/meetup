@@ -4,62 +4,61 @@ import android.app.Application
 import android.content.ContentResolver
 import androidx.lifecycle.*
 import com.app.meetup.repo.Repository
+import com.app.meetup.utils.ContactUtils
+import com.app.meetup.utils.FirestoreUtils
+import com.app.meetup.utils.combineContacts
+import com.app.meetup.utils.combineProfilesWithFriends
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ActivityViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repo = Repository.getInstance(application)
+    private val repo = Repository.getInstance()
 
-    val allContacts = MutableLiveData<HashMap<String, Contact>>()
+    val allContacts = MutableLiveData<HashMap<String, Profile>>()
 
     // Contacts that are on Meetup, these accounts has unset @param isFriend
     val availableFriends = MutableLiveData<MutableList<Account>>()
 
-    val userData = repo.userData
 
     // Meetup contacts that are added as friends by user
-    val friends = MutableLiveData<MutableList<Account>>()
 
+    val friends = repo.friends
     val friendRequests = MutableLiveData<MutableList<Account>>()
     val requestSent = MutableLiveData<MutableList<Account>>()
 
     // Contacts that are on Meetup & are in user's friend list
     val meetupContacts =
-        userData.combineContacts(availableFriends) { contactListFriends, userData ->
+        repo.userData.combineContacts(availableFriends) { contactListFriends, userData ->
 
-            val friendList = mutableListOf<Account>()
             val requests = mutableListOf<Account>()
             val sentRequests = mutableListOf<Account>()
 
             val filteredList = mutableListOf<Account>()
 
-            contactListFriends.forEach {  acc ->
+            contactListFriends.forEach { acc ->
                 // If it is found in friends list then mark him friend (btnFriend || btnUnfriend)
-                acc.isFriend = userData.friends.any { friend -> friend == acc.contact.phoneNo }
-                acc.isRequestSent = userData.requestSent.any { friend -> friend == acc.contact.phoneNo }
-                acc.hasSentFriendRequest = userData.friendRequests.any { friend -> friend == acc.contact.phoneNo }
+                acc.isFriend = userData.friends.any { friend -> friend == acc.profile.phoneNo }
+                acc.isRequestSent =
+                    userData.requestSent.any { friend -> friend == acc.profile.phoneNo }
+                acc.hasSentFriendRequest =
+                    userData.friendRequests.any { friend -> friend == acc.profile.phoneNo }
 
-                if(acc.isFriend) {
-                    friendList.add(acc)
-                    // add friends as well
+                if (acc.isFriend) {
                     filteredList.add(acc)
-                } else if(acc.isRequestSent)
+                } else if (acc.isRequestSent)
                     sentRequests.add(acc)
-                else if(acc.hasSentFriendRequest)
+                else if (acc.hasSentFriendRequest)
                     requests.add(acc)
                 else // Add non friends, should be able to send them friend request
                     filteredList.add(acc)
             }
-            // Also add the friends, so we don't have to filter each time
-            friends.postValue(friendList)
 
             friendRequests.postValue(requests)
             requestSent.postValue(sentRequests)
 
             filteredList
         }
-
 
 
     fun loadContacts(
@@ -78,6 +77,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+
     private fun findFriends(phoneNo: String) {
 
         FirestoreUtils.getProfiles(phoneNo).get().addOnSuccessListener { snap ->
@@ -93,15 +93,10 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
                 val list = arrayListOf<Account>()
 
                 matchedContacts.forEach { doc ->
-                    val phoneContact = allContacts.value!![doc.id]
-                    val data = doc.data!!
-                    val profile = Profile(
-                        data["uid"] as String,
-                        data["name"] as String,
-                        data["phoneNo"] as String
-                    )
-
-                    list.add(Account(profile, phoneContact!!))
+//                    val phoneContact = allContacts.value!![doc.id]
+                    doc.toObject(Profile::class.java)?.let { profile ->
+                        list.add(Account(profile))
+                    }
                 }
                 availableFriends.postValue(list)
             }
@@ -112,7 +107,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             meetupContacts.value?.let { contacts ->
 
-                if(contacts.remove(old))
+                if (contacts.remove(old))
                     contacts.add(index, new)
             }
         }

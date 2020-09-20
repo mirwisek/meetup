@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.*
 import com.app.meetup.ui.contacts.customviews.FriendsListRecyclerAdapter
+import com.app.meetup.utils.FirestoreUtils
+import com.app.meetup.utils.getPhoneNoFormatted
+import com.app.meetup.utils.toastFrag
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
 class FriendsListFragment : Fragment() {
@@ -42,7 +45,7 @@ class FriendsListFragment : Fragment() {
         adapter.setOnFriendReactionListener(object: FriendsListRecyclerAdapter.OnFriendReaction {
 
             override fun onAddedFriend(account: Account, index: Int) {
-                FirestoreUtils.addFriend(getPhoneNoFormatted(), account.profile.phoneNo)
+                FirestoreUtils.addFriend(getPhoneNoFormatted()!!, account.profile.phoneNo)
                     .addOnSuccessListener {
 
                         val updatedContact = account.copy(isRequestSent = true)
@@ -56,7 +59,7 @@ class FriendsListFragment : Fragment() {
 
             override fun onUnfriend(account: Account, index: Int) {
 
-                FirestoreUtils.unFriend(getPhoneNoFormatted(), account.profile.phoneNo)
+                FirestoreUtils.unFriend(getPhoneNoFormatted()!!, account.profile.phoneNo)
                     .addOnFailureListener {
                         toastFrag("Couldn't unfriend, server problem")
                         it.printStackTrace()

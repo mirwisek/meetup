@@ -8,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.app.meetup.*
+import com.app.meetup.utils.toPx
 
 class FriendsRequestRecyclerAdapter(context: Context): RecyclerView.Adapter<FriendsRequestRecyclerAdapter.ViewHolder>() {
 
@@ -37,7 +38,6 @@ class FriendsRequestRecyclerAdapter(context: Context): RecyclerView.Adapter<Frie
         }
 
         holder.friendName.text = account.profile.name
-        holder.contactName.text = account.contact.name
         holder.phone.text = account.profile.phoneNo
 
         holder.btnApprove.setOnClickListener {

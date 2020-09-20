@@ -1,4 +1,4 @@
-package com.app.meetup
+package com.app.meetup.utils
 
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.*

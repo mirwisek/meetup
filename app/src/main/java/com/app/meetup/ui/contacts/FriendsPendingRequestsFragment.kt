@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.*
 import com.app.meetup.ui.contacts.customviews.FriendsListRecyclerAdapter
+import com.app.meetup.utils.FirestoreUtils
+import com.app.meetup.utils.getPhoneNoFormatted
+import com.app.meetup.utils.toastFrag
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
 class FriendsPendingRequestsFragment : Fragment() {
@@ -41,7 +44,7 @@ class FriendsPendingRequestsFragment : Fragment() {
 
             override fun onRequestCancelled(account: Account, index: Int) {
 
-                FirestoreUtils.cancelPendingRequest(getPhoneNoFormatted(), account.profile.phoneNo)
+                FirestoreUtils.cancelPendingRequest(getPhoneNoFormatted()!!, account.profile.phoneNo)
                     .addOnFailureListener {
                         toastFrag("Couldn't cancel request, try again later.")
                         it.printStackTrace()

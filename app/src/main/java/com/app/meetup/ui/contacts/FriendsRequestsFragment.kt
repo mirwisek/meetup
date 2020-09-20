@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.*
 import com.app.meetup.ui.contacts.customviews.FriendsRequestRecyclerAdapter
+import com.app.meetup.utils.FirestoreUtils
+import com.app.meetup.utils.getPhoneNoFormatted
+import com.app.meetup.utils.toastFrag
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
 class FriendsRequestsFragment : Fragment() {
@@ -35,16 +38,13 @@ class FriendsRequestsFragment : Fragment() {
         vmActivity.friendRequests.observe(viewLifecycleOwner, {
             it?.let { accounts ->
                 adapter.updateList(accounts)
-                if(accounts.isNotEmpty()) {
-
-                }
             }
         })
 
         adapter.setOnReactionListener(object: FriendsRequestRecyclerAdapter.OnRequestInteraction {
 
             override fun onAccepted(account: Account) {
-                FirestoreUtils.acceptFriendRequest(getPhoneNoFormatted(), account.profile.phoneNo)
+                FirestoreUtils.acceptFriendRequest(getPhoneNoFormatted()!!, account.profile.phoneNo)
                     .addOnFailureListener {
                         toastFrag("Couldn't accept friend request at the moment, please try again later")
                         it.printStackTrace()
@@ -52,7 +52,7 @@ class FriendsRequestsFragment : Fragment() {
             }
 
             override fun onRejected(account: Account) {
-                FirestoreUtils.declineFriendRequest(getPhoneNoFormatted(), account.profile.phoneNo)
+                FirestoreUtils.declineFriendRequest(getPhoneNoFormatted()!!, account.profile.phoneNo)
                     .addOnFailureListener {
                         toastFrag("Couldn't decline friend request at the moment, please try again later")
                         it.printStackTrace()
