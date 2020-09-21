@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.app.meetup.R
 import com.app.meetup.ui.home.combineFormat
 import com.app.meetup.ui.home.models.Event
-import com.app.meetup.ui.home.models.EventView
 
 class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsListRecyclerAdapter.ViewHolder>() {
 
@@ -44,8 +43,7 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
         holder.eventTitle.text = event.eventTitle
         holder.locationName.text = event.selectedVenue.locationName
         holder.eventTime.text = event.startTime.combineFormat(event.endTime)
-        holder.hostName.text = event.organizer.name
-        holder.hostPhone.text = event.organizer.phoneNo
+        holder.organizerName.text = event.organizer.name
 
         holder.itemView.setOnClickListener {
             clickListener?.onClicked(event, position)
@@ -61,8 +59,7 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
         val eventTitle: TextView = view.findViewById(R.id.tvEventTitle)
         val locationName: TextView = view.findViewById(R.id.locationName)
         val eventTime: TextView = view.findViewById(R.id.tvEventTime)
-        val hostName: TextView = view.findViewById(R.id.tvHostName)
-        val hostPhone: TextView = view.findViewById(R.id.tvHostPhone)
+        val organizerName: TextView = view.findViewById(R.id.tvOrganizerName)
         val image: ImageView = view.findViewById(R.id.eventPlaceImage)
         val container: View = view.findViewById(R.id.container)
     }

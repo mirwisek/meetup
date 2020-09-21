@@ -4,6 +4,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
 import org.threeten.bp.*
+import org.threeten.bp.format.DateTimeFormatter
 
 private val offset = OffsetDateTime.now().offset
 
@@ -33,11 +34,37 @@ fun Timestamp.toLocalDateTime(): LocalDateTime {
     return LocalDateTime.ofEpochSecond(seconds, nanoseconds, offset)
 }
 
+fun Timestamp.toLocalTime(): LocalTime {
+    return toLocalDateTime().toLocalTime()
+}
+
 fun LatLng.toGeoPoint(): GeoPoint {
     return GeoPoint(latitude, longitude)
 }
 
 fun LocalDateTime.combineFormat(endTime: LocalDateTime): String {
-    return "From ${toLocalDate().getFormatted()} ${toLocalTime().getFormatted()} to " +
-            "${endTime.toLocalDate().getFormatted()} ${endTime.toLocalTime().getFormatted()}"
+    val startFormat = DateTimeFormatter.ofPattern("E, MMM d HH:mm a")
+    return "${format(startFormat)} - " + endTime.toLocalTime().getFormatted()
 }
+
+fun LocalTime.combineTimeFormat(endTime: LocalTime): String {
+    val t1 = formatTime
+    val t2 = endTime.formatTime
+    val p = t1.substringAfter(" ")
+    return if(t2.endsWith(p))
+        formatTime.substringBeforeLast(" ") + " - " + t2
+    else
+        "$formatTime - $t2"
+}
+
+val LocalDate.formatDate: String
+get() {
+    val startFormat = DateTimeFormatter.ofPattern("E, MMM d")
+    return format(startFormat)
+}
+
+val LocalTime.formatTime: String
+    get() {
+        val startFormat = DateTimeFormatter.ofPattern("HH:mm a")
+        return format(startFormat)
+    }

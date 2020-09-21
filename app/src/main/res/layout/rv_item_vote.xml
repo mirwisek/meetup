@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+
+    <TextView
+        android:id="@+id/voteCount"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:background="@drawable/dot"
+        android:backgroundTint="@color/colorListBg"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/locationName"
+        android:text="01" />
+
+    <ImageView
+        android:id="@+id/checked"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:background="@drawable/dot"
+        android:backgroundTint="@color/checkBg"
+        android:src="@drawable/ic_check"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintVertical_bias="0.99"
+        app:layout_constraintHorizontal_bias="0.99"
+        app:layout_constraintStart_toStartOf="@id/voteCount"
+        app:layout_constraintEnd_toEndOf="@id/voteCount"
+        app:layout_constraintTop_toTopOf="@id/voteCount"
+        app:layout_constraintBottom_toBottomOf="@id/voteCount"/>
+
+    <TextView
+        android:id="@+id/locationName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintStart_toEndOf="@id/voteCount"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="This will be the address of the location" />
+
+    <TextView
+        android:id="@+id/address"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="@id/locationName"
+        app:layout_constraintEnd_toEndOf="@id/locationName"
+        app:layout_constraintTop_toBottomOf="@id/locationName"
+        tools:text="This will be the address of the location" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/votersGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/address"
+        app:layout_constraintStart_toStartOf="@id/locationName"
+        app:layout_constraintEnd_toEndOf="@id/locationName">
+
+    </com.google.android.material.chip.ChipGroup>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

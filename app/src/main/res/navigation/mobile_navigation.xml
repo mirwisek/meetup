@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_navigation_home_to_mapsActivity"
             app:destination="@id/mapsActivity" />
+        <action
+            android:id="@+id/action_navigation_home_to_editEventFragment"
+            app:destination="@id/editEventFragment" />
     </fragment>
 
     <fragment
@@ -32,4 +35,14 @@
         android:name="com.app.meetup.ui.home.addevent.MapsActivity"
         android:label="activity_maps"
         tools:layout="@layout/activity_maps" />
+    <fragment
+        android:id="@+id/editEventFragment"
+        android:name="com.app.meetup.ui.home.eventlist.EditEventFragment"
+        android:label="EditEventFragment" >
+
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+
+    </fragment>
 </navigation>

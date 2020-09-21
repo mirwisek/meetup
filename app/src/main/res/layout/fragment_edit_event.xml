@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fui_transparent"
+    app:shapeAppearance="@style/EventFragmentAppearance"
+    tools:layout_gravity="bottom">
+
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/locationName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Title for the event" />
+
+                <TextView
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:textSize="18sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/locationName"
+                    tools:text="Sunday, Jul 5" />
+
+                <View
+                    android:id="@+id/dot"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:layout_marginStart="@dimen/dot_margin_start"
+                    android:background="@drawable/dot"
+                    app:layout_constraintBottom_toBottomOf="@id/date"
+                    app:layout_constraintStart_toEndOf="@id/date"
+                    app:layout_constraintTop_toTopOf="@id/date" />
+
+                <TextView
+                    android:id="@+id/time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dot_margin_start"
+                    android:textSize="18sp"
+                    app:layout_constraintStart_toEndOf="@id/dot"
+                    app:layout_constraintTop_toTopOf="@id/date"
+                    tools:text="12:00 AM - 1:00 PM" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_event"
+                    android:layout_height="@dimen/icon_size_event"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_contacts"
+                    app:layout_constraintBottom_toBottomOf="@id/guestSubtitle"
+                    app:layout_constraintEnd_toEndOf="@id/guide"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/guestTitle" />
+
+                <TextView
+                    android:id="@+id/guestTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/date"
+                    tools:text="4 guests" />
+
+                <TextView
+                    android:id="@+id/guestSubtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/guestTitle"
+                    tools:text="3 yes, 1 awaiting" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvVotes"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/guestSubtitle"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/rv_item_vote" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_event"
+                    android:layout_height="@dimen/icon_size_event"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_time"
+                    app:layout_constraintBottom_toBottomOf="@id/pendingVotesSubtitle"
+                    app:layout_constraintEnd_toEndOf="@id/guide"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/pendingVotes" />
+
+                <TextView
+                    android:id="@+id/pendingVotes"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/rvVotes"
+                    android:text="Pending votes" />
+
+                <TextView
+                    android:id="@+id/pendingVotesSubtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/pendingVotes"
+                    tools:text="3 responded, 1 awaiting" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/pendingVotesGroup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/pendingVotesSubtitle" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_event"
+                    android:layout_height="@dimen/icon_size_event"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_marker"
+                    app:layout_constraintBottom_toBottomOf="@id/checkedInSubtitle"
+                    app:layout_constraintEnd_toEndOf="@id/guide"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/checkedIn" />
+
+                <TextView
+                    android:id="@+id/checkedIn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/pendingVotesGroup"
+                    android:text="Checked in" />
+
+                <TextView
+                    android:id="@+id/checkedInSubtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/checkedIn"
+                    tools:text="0 confirmed, 4 awaiting" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/checkedInGroup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/guide"
+                    app:layout_constraintTop_toBottomOf="@id/checkedInSubtitle" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guide"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_begin="40dp" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="bottom"
+            android:background="@drawable/modal_bottom_sheet"
+            android:layout_gravity="bottom">
+
+            <TextView
+                android:id="@+id/hintGoing"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:layout_marginStart="10dp"
+                android:layout_alignParentStart="true"
+                android:text="Going?" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:singleSelection="true"
+                app:selectionRequired="true"
+                android:layout_marginStart="10dp"
+                app:checkedButton="@id/btnToggleNo"
+                android:layout_toEndOf="@id/hintGoing">
+
+                <com.app.meetup.ui.home.customviews.SingleCheckMaterialButton
+                    android:id="@+id/btnToggleYes"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="80dp"
+                    android:layout_height="match_parent"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:text="Yes"
+                    android:textSize="@dimen/btn_event_edit_text_size" />
+
+                <com.app.meetup.ui.home.customviews.SingleCheckMaterialButton
+                    android:id="@+id/btnToggleNo"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:text="No"
+                    android:textSize="@dimen/btn_event_edit_text_size" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddVenue"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                app:icon="@drawable/ic_add_location"
+                android:text="New"
+                android:textSize="@dimen/btn_event_edit_text_size"
+                app:iconGravity="end" />
+
+        </RelativeLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</com.google.android.material.card.MaterialCardView>

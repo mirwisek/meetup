@@ -13,11 +13,15 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.FragmentNavigatorDestinationBuilder
+import androidx.navigation.fragment.findNavController
 import com.app.meetup.ActivityViewModel
 import com.app.meetup.MainActivity
 import com.app.meetup.R
 import com.app.meetup.ui.home.addevent.MapsActivity
+import com.app.meetup.ui.home.eventlist.EditEventFragment
 import com.app.meetup.ui.home.eventlist.EventsListRecyclerAdapter
+import com.app.meetup.ui.home.models.Event
 import com.app.meetup.utils.getLocationRequest
 import com.app.meetup.utils.log
 import com.app.meetup.utils.toastFrag
@@ -58,7 +62,20 @@ class HomeFragment : Fragment() {
         val adapter = EventsListRecyclerAdapter(requireContext())
         view.rvEvents.adapter = adapter
 
+        adapter.setOnItemClickListener(object : EventsListRecyclerAdapter.OnItemClickListener {
 
+            override fun onClicked(event: Event, index: Int) {
+                findNavController().navigate(R.id.action_navigation_home_to_editEventFragment,
+                    Bundle().apply {
+                        putString(EditEventFragment.KEY_EVENT_ID, event.id)
+                    })
+            }
+
+        })
+
+        vmHome.firestoreEvents.observe(viewLifecycleOwner, {
+            vmHome.refactorEvents()
+        })
 
         vmHome.events.observe(viewLifecycleOwner, {
             it?.let { list ->
@@ -149,7 +166,7 @@ class HomeFragment : Fragment() {
                     enableGPS()
             }
             MapsActivity.RC_NEW_EVENT -> {
-                if(resultCode == Activity.RESULT_OK)
+                if (resultCode == Activity.RESULT_OK)
                     toastFrag("OK")
                 else
                     toastFrag("Got msg from maps")

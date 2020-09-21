@@ -102,6 +102,7 @@ object FirestoreUtils {
             val eventDoc = trans.get(getEvents().document())
             val id = eventDoc.id
 
+            firestoreEvent.id = id
             trans.set(getEvents().document(id), firestoreEvent)
 
             firestoreEvent.invites.forEach { invitePhone ->
