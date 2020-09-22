@@ -73,10 +73,6 @@ class HomeFragment : Fragment() {
 
         })
 
-        vmHome.firestoreEvents.observe(viewLifecycleOwner, {
-            vmHome.refactorEvents()
-        })
-
         vmHome.events.observe(viewLifecycleOwner, {
             it?.let { list ->
                 adapter.updateList(list)

@@ -11,13 +11,12 @@ data class FirestoreEvent(
     var selectedVenueId: String? = null,
     var venues: List<Venue> = mutableListOf(),
     var invites: List<String> = mutableListOf(),
-    var votes: List<FirestoreVote> = mutableListOf(),
+    var votes: MutableList<FirestoreVote> = mutableListOf(),
     var checkedIn: List<String> = mutableListOf(),
     var createdAt: Timestamp? = null
 )
 
 data class FirestoreVote(
     val placeId: String? = null,
-    var count: Int = 0,
-    var voters: List<String> = mutableListOf()
+    var voters: MutableList<String> = mutableListOf()
 )

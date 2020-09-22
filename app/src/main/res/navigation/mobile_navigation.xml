@@ -38,11 +38,26 @@
     <fragment
         android:id="@+id/editEventFragment"
         android:name="com.app.meetup.ui.home.eventlist.EditEventFragment"
-        android:label="EditEventFragment" >
+        android:label="EditEventFragment"
+        tools:layout="@layout/fragment_edit_event">
 
         <argument
             android:name="eventId"
             app:argType="string" />
 
+        <action
+            android:id="@+id/action_add_new_venue"
+            app:destination="@id/mapsActivity" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/addEventFragment"
+        android:name="com.app.meetup.ui.home.addevent.AddEventFragment"
+        android:label="AddEventFragment"
+        tools:layout="@layout/fragment_add_event">
+
+        <argument
+            android:name="eventId"
+            app:argType="string" />
     </fragment>
 </navigation>

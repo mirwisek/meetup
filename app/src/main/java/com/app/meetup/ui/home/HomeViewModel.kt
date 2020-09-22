@@ -1,6 +1,5 @@
 package com.app.meetup.ui.home
 
-import android.location.Location
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
@@ -17,44 +16,8 @@ class HomeViewModel : ViewModel() {
     val friends = repo.friends
     val profiles = repo.profiles
 
-    val firestoreEvents = repo.events
+    val currentProfile = repo.currentProfile
 
-    val events = MutableLiveData<List<Event>>()
+    val events = repo.events
 
-    fun refactorEvents() {
-        viewModelScope.launch {
-            firestoreEvents.value?.let { fEvents ->
-
-                val profileList = profiles.value!!
-
-                val mEvents = fEvents.map { fsEvent ->
-
-                    Event(
-                        fsEvent.id!!,
-                        profileList.first { p -> p.phoneNo == fsEvent.organizer!! },
-                        fsEvent.startTime!!.toLocalDateTime(),
-                        fsEvent.endTime!!.toLocalDateTime(),
-                        fsEvent.eventTitle!!,
-                        fsEvent.venues.first { v -> fsEvent.selectedVenueId == v.id },
-                        fsEvent.venues,
-                        profileList.filter { p ->
-                            fsEvent.invites.any { inv -> inv == p.phoneNo }
-                        },
-                        fsEvent.votes.map { fv ->
-                            val eVote = Vote(fv.placeId, fv.count)
-                            eVote.voters = profileList.filter { p ->
-                                fv.voters.any { v -> v == p.phoneNo }
-                            }
-                            eVote
-                        },
-                        profileList.filter { p ->
-                            fsEvent.checkedIn.any { c -> c == p.phoneNo }
-                        },
-                        fsEvent.createdAt!!.toLocalDateTime()
-                    )
-                }
-                events.postValue(mEvents)
-            }
-        } // viewmodelscope end
-    }
 }

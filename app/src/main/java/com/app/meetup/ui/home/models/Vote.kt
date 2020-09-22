@@ -4,6 +4,5 @@ import com.app.meetup.Profile
 
 data class Vote(
     val placeId: String? = null,
-    var count: Int = 0,
-    var voters: List<Profile> = mutableListOf()
+    var voters: MutableSet<Profile> = mutableSetOf()
 )

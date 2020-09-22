@@ -12,6 +12,9 @@ import com.app.meetup.R
 import com.app.meetup.ui.home.combineFormat
 import com.app.meetup.ui.home.models.Event
 import com.app.meetup.ui.home.models.Venue
+import com.app.meetup.ui.home.models.Vote
+import com.app.meetup.utils.getPhoneNoFormatted
+import com.app.meetup.utils.visible
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 
@@ -20,6 +23,7 @@ class VoteListRecyclerAdapter(context: Context): RecyclerView.Adapter<VoteListRe
     private var event: Event? = null
     private val ctx: Context = context
     private var clickListener: OnItemClickListener? = null
+    private val userPhone = getPhoneNoFormatted()!!
 
     private var isChecked = false
 
@@ -48,19 +52,21 @@ class VoteListRecyclerAdapter(context: Context): RecyclerView.Adapter<VoteListRe
 
         holder.locationName.text = venue.locationName
         holder.address.text = venue.address
-        holder.voteCount.text = vote.count.toString()
+        holder.voteCount.text = vote.voters.size.toString()
 
+        holder.votersGroup.removeAllViews()
         vote.voters.forEach { profile ->
             val chip = Chip(ctx)
             chip.text = profile.name
             holder.votersGroup.addView(chip)
+            // If voters contain current user then he has voted for this ViewHolderItem
+            if(profile.phoneNo == userPhone)
+                holder.checked.visible()
         }
 
 
         holder.itemView.setOnClickListener {
-            clickListener?.onClicked(venue, position)
-            isChecked = !isChecked
-            holder.checked.visibility = if(isChecked) View.VISIBLE else View.INVISIBLE
+            clickListener?.onClicked(vote, position)
         }
     }
 
@@ -82,12 +88,7 @@ class VoteListRecyclerAdapter(context: Context): RecyclerView.Adapter<VoteListRe
         notifyDataSetChanged()
     }
 
-    fun toggleCheck() {
-
-    }
-
-
     interface OnItemClickListener {
-        fun onClicked(venue: Venue, index: Int)
+        fun onClicked(vote: Vote, index: Int)
     }
 }

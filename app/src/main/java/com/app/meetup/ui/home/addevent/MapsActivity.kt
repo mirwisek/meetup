@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import androidx.core.content.edit
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
 import com.app.meetup.R
+import com.app.meetup.ui.home.HomeViewModel
 import com.app.meetup.utils.*
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.*
@@ -34,6 +37,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     companion object {
         const val RC_NEW_EVENT = 125
+        const val RC_ADD_VENUE = 151
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +55,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         addEventFragment = (supportFragmentManager.findFragmentByTag(AddEventFragment.TAG)
             ?: AddEventFragment()) as AddEventFragment
+
+        // Add argument if available
+        intent.getStringExtra(AddEventFragment.KEY_EVENT_ID)?.let { eventId ->
+            addEventFragment.arguments = Bundle().apply {
+                putString(AddEventFragment.KEY_EVENT_ID, eventId)
+            }
+        }
 
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.events_fragment, addEventFragment)
@@ -70,9 +81,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             )
         )
 
+
         // Set up a PlaceSelectionListener to handle the response.
         autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
+
 
                 navigateToLocation(place.latLng!!)
                 dropMarker(place.latLng!!)

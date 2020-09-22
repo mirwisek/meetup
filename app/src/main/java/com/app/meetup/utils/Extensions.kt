@@ -54,6 +54,14 @@ fun log(msg: String) {
     Log.d("🌀❤💕😎🤷 ffnet :: ‍", msg)
 }
 
+fun View.disable() {
+    isEnabled = false
+}
+
+fun View.enable() {
+    isEnabled = true
+}
+
 fun View.invisible() {
     visibility = View.INVISIBLE
 }

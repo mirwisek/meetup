@@ -1,6 +1,9 @@
 package com.app.meetup.utils
 
 import com.app.meetup.ui.home.models.FirestoreEvent
+import com.app.meetup.ui.home.models.FirestoreVote
+import com.app.meetup.ui.home.models.Venue
+import com.app.meetup.ui.home.models.Vote
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
@@ -33,8 +36,8 @@ object FirestoreUtils {
         val target = getUserData(targetPhoneNo)
 
         return db.runTransaction { trans ->
-            trans.update(source,"friends", FieldValue.arrayRemove(targetPhoneNo))
-            trans.update(target,"friends", FieldValue.arrayRemove(phoneNo))
+            trans.update(source, "friends", FieldValue.arrayRemove(targetPhoneNo))
+            trans.update(target, "friends", FieldValue.arrayRemove(phoneNo))
             null
         }
     }
@@ -44,8 +47,8 @@ object FirestoreUtils {
         val target = getUserData(targetPhoneNo)
 
         return db.runTransaction { trans ->
-            trans.update(source,"requestSent", FieldValue.arrayUnion(targetPhoneNo))
-            trans.update(target,"friendRequests", FieldValue.arrayUnion(phoneNo))
+            trans.update(source, "requestSent", FieldValue.arrayUnion(targetPhoneNo))
+            trans.update(target, "friendRequests", FieldValue.arrayUnion(phoneNo))
             null
         }
     }
@@ -55,8 +58,8 @@ object FirestoreUtils {
         val target = getUserData(targetPhoneNo)
 
         return db.runTransaction { trans ->
-            trans.update(source,"requestSent", FieldValue.arrayRemove(targetPhoneNo))
-            trans.update(target,"friendRequests", FieldValue.arrayRemove(phoneNo))
+            trans.update(source, "requestSent", FieldValue.arrayRemove(targetPhoneNo))
+            trans.update(target, "friendRequests", FieldValue.arrayRemove(phoneNo))
             null
         }
     }
@@ -66,10 +69,10 @@ object FirestoreUtils {
         val target = getUserData(targetPhoneNo)
 
         return db.runTransaction { trans ->
-            trans.update(target,"requestSent", FieldValue.arrayRemove(phoneNo))
-            trans.update(source,"friendRequests", FieldValue.arrayRemove(targetPhoneNo))
-            trans.update(source,"friends", FieldValue.arrayUnion(targetPhoneNo))
-            trans.update(target,"friends", FieldValue.arrayUnion(phoneNo))
+            trans.update(target, "requestSent", FieldValue.arrayRemove(phoneNo))
+            trans.update(source, "friendRequests", FieldValue.arrayRemove(targetPhoneNo))
+            trans.update(source, "friends", FieldValue.arrayUnion(targetPhoneNo))
+            trans.update(target, "friends", FieldValue.arrayUnion(phoneNo))
             null
         }
     }
@@ -79,8 +82,8 @@ object FirestoreUtils {
         val target = getUserData(targetPhoneNo)
 
         return db.runTransaction { trans ->
-            trans.update(target,"requestSent", FieldValue.arrayRemove(phoneNo))
-            trans.update(source,"friendRequests", FieldValue.arrayRemove(targetPhoneNo))
+            trans.update(target, "requestSent", FieldValue.arrayRemove(phoneNo))
+            trans.update(source, "friendRequests", FieldValue.arrayRemove(targetPhoneNo))
             null
         }
     }
@@ -111,6 +114,30 @@ object FirestoreUtils {
             }
 
             trans.update(source, "eventsUpcoming", FieldValue.arrayUnion(id))
+
+            null
+        }
+    }
+
+    fun updateVenue(eventId: String, phoneNo: String, venues: List<Venue>, selectedVenue: String,
+        votes: List<FirestoreVote>
+    ): Task<Task<Void>> {
+
+        val source = getUserData(phoneNo)
+
+        return db.runTransaction { trans ->
+
+            trans.update(
+                getEvents().document(eventId),
+                hashMapOf(
+                    "selectedVenueId" to selectedVenue,
+                    "venues" to venues,
+                    "votes" to votes
+                )
+            )
+
+            trans.update(source, "eventsInvitation", FieldValue.arrayRemove(eventId))
+            trans.update(source, "eventsUpcoming", FieldValue.arrayUnion(eventId))
 
             null
         }

@@ -7,6 +7,7 @@ import com.app.meetup.Account
 import com.app.meetup.Profile
 import com.app.meetup.utils.FirestoreUtils
 import com.app.meetup.UserData
+import com.app.meetup.ui.home.models.Event
 import com.app.meetup.ui.home.models.FirestoreEvent
 import com.app.meetup.utils.combineProfilesWithFriends
 import com.app.meetup.utils.getPhoneNoFormatted
@@ -17,7 +18,8 @@ class Repository private constructor() :CoroutineScope {
 
     val userData = MutableLiveData<UserData>()
     val profiles = MutableLiveData<MutableList<Profile>>()
-    val events = MutableLiveData<MutableList<FirestoreEvent>>()
+    val currentProfile = MutableLiveData<Profile>()
+    val events = MutableLiveData<MutableList<Event>>()
 
     val friends = userData.combineProfilesWithFriends(profiles) { profilesList, userData ->
 
@@ -79,7 +81,12 @@ class Repository private constructor() :CoroutineScope {
 
                 snap?.let { doc ->
                     try {
-                        profiles.postValue(doc.toObjects(Profile::class.java))
+                        val _profiles = doc.toObjects(Profile::class.java)
+                        profiles.postValue(_profiles)
+                        val cProfile = _profiles.first { p ->
+                            p.phoneNo == phoneNo
+                        }
+                        currentProfile.postValue(cProfile)
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -102,7 +109,11 @@ class Repository private constructor() :CoroutineScope {
 
                 snap?.let { doc ->
                     try {
-                        events.postValue(doc.toObjects(FirestoreEvent::class.java))
+                        val firestoreEvents = doc.toObjects(FirestoreEvent::class.java)
+                        val newEvents = RepoUtils.transformFirestoreEvents(
+                            firestoreEvents, profiles.value!!
+                        )
+                        events.postValue(newEvents.toMutableList())
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }

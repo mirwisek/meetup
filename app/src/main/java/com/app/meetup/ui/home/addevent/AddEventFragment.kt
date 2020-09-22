@@ -13,10 +13,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.app.meetup.Invite
 import com.app.meetup.R
+import com.app.meetup.ui.home.HomeViewModel
 import com.app.meetup.ui.home.getFormatted
 import com.app.meetup.ui.home.models.FirestoreEvent
 import com.app.meetup.ui.home.models.FirestoreVote
 import com.app.meetup.ui.home.models.Venue
+import com.app.meetup.ui.home.models.Vote
 import com.app.meetup.ui.home.toGeoPoint
 import com.app.meetup.ui.home.toTimestamp
 import com.app.meetup.utils.*
@@ -32,10 +34,17 @@ class AddEventFragment : Fragment() {
 
     companion object {
         const val TAG = "eventFragment"
+        const val KEY_EVENT_ID = "eventId"
     }
 
     private val bottomSheet = SelectInvitesBottomSheet()
     private lateinit var vmBottomSheet: BottomSheetViewModel
+    private lateinit var vmHome: HomeViewModel
+
+    private val userPhone = getPhoneNoFormatted()!!
+
+    // For Edit Event only
+    private var eventId: String? = null
 
 
     private var invitesPhoneOnly: List<String> = mutableListOf()
@@ -66,126 +75,207 @@ class AddEventFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         vmBottomSheet = ViewModelProvider(requireActivity()).get(BottomSheetViewModel::class.java)
+        vmHome = ViewModelProvider(requireActivity()).get(HomeViewModel::class.java)
 
-        view.btnInvitePeople.setOnClickListener {
-            bottomSheet.show(parentFragmentManager, SelectInvitesBottomSheet::class.simpleName)
-        }
-
-        vmBottomSheet.friends.observe(viewLifecycleOwner, { list ->
-            list?.let { profiles ->
-                val invites = profiles.map { Invite(it, false) }
-                vmBottomSheet.inviteList.postValue(invites)
-                vmBottomSheet.friends.removeObservers(viewLifecycleOwner)
-            }
-        })
-
-        vmBottomSheet.selectedInvites.observe(viewLifecycleOwner, { list ->
-            if (list.isNullOrEmpty()) {
-                view.btnInvitePeople.text = "INVITED CONTACTS (0)"
-            } else {
-                view.btnInvitePeople.text = "INVITED CONTACTS (${list.size})"
-            }
-        })
+        eventId = arguments?.getString(KEY_EVENT_ID)
 
         view.btnConfirm.isEnabled = false
 
-        val today = LocalDateTime.now()
+        if (eventId == null) {
+            // Add event Mode
 
+            vmBottomSheet.friends.observe(viewLifecycleOwner, { list ->
+                list?.let { profiles ->
+                    val invites = profiles.map { Invite(it, false) }
+                    vmBottomSheet.inviteList.postValue(invites)
+                    vmBottomSheet.friends.removeObservers(viewLifecycleOwner)
+                }
+            })
 
-        val eventStartTimePicker = TimePickerDialog(
-            requireContext(),
-            { _, hourOfDay, minute ->
-                val eventStartTime = LocalTime.of(hourOfDay, minute)
-                eventStart = LocalDateTime.of(eventDate!!, eventStartTime)
-                btnStartTime.text = eventStart!!.getFormatted()
-                enableConfirmIfAllSet()
+            vmBottomSheet.selectedInvites.observe(viewLifecycleOwner, { list ->
+                if (list.isNullOrEmpty()) {
+                    view.btnInvitePeople.text = "INVITED CONTACTS (0)"
+                } else {
+                    view.btnInvitePeople.text = "INVITED CONTACTS (${list.size})"
+                }
+            })
 
-            }, today.hour, today.minute, false
-        )
+            val today = LocalDateTime.now()
 
-        val eventEndTimePicker = TimePickerDialog(
-            requireContext(),
-            { _, hourOfDay, minute ->
-                val eventEndTime = LocalTime.of(hourOfDay, minute)
-                eventEnd = LocalDateTime.of(eventDate!!, eventEndTime)
-                btnEndTime.text = eventEnd!!.getFormatted()
-                enableConfirmIfAllSet()
-            }, today.hour, today.minute, false
-        )
-
-        val startDatePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-            eventDate = LocalDate.of(year, month, dayOfMonth)
-            // Now we track which button triggered datePicker 1=StartTime and 0=EndTime
-            if(showStartTimeAfterDate == 1)
-                eventStartTimePicker.show()
-            else if(showStartTimeAfterDate == 0)
-                eventEndTimePicker.show()
-        }, today.year, today.monthValue, today.dayOfMonth)
-
-
-        startDatePicker.setTitle("Event Date")
-        eventEndTimePicker.setTitle("Event End Time")
-        eventStartTimePicker.setTitle("Event Starting Time")
-
-        view.btnStartTime.setOnClickListener {
-            if(eventDate == null) {
-                // 1 means true but -1 means unset
-                showStartTimeAfterDate = 1
-                startDatePicker.show()
-            } else
-                eventStartTimePicker.show()
-        }
-
-        view.btnEndTime.setOnClickListener {
-            if(eventDate == null) {
-                // 0 means false
-                showStartTimeAfterDate = 0
-                startDatePicker.show()
-            } else
-                eventEndTimePicker.show()
-        }
-
-        bottomSheet.setOnInviteSelectionListener(object :
-            SelectInvitesBottomSheet.OnInviteSelectionListener {
-
-            override fun onComplete(list: List<Invite>) {
-                invitesPhoneOnly = list.map { it.profile.phoneNo }
-                enableConfirmIfAllSet()
+            view.btnInvitePeople.setOnClickListener {
+                bottomSheet.show(parentFragmentManager, SelectInvitesBottomSheet::class.simpleName)
             }
-        })
 
-        view.btnConfirm.setOnClickListener {
-            val intent = Intent()
-            val phone = getPhoneNoFormatted()!!
-            val event = FirestoreEvent(
-                null,
-                phone,
-                eventStart!!.toTimestamp(),
-                eventEnd!!.toTimestamp(),
-                "Get together with friends",
-                venue!!.id,
-                mutableListOf(venue!!),
-                invitesPhoneOnly,
-                mutableListOf(FirestoreVote(venue!!.id, 1, listOf(phone))),
-                mutableListOf(),
-                Timestamp.now()
+            val eventStartTimePicker = TimePickerDialog(
+                requireContext(),
+                { _, hourOfDay, minute ->
+                    val eventStartTime = LocalTime.of(hourOfDay, minute)
+                    eventStart = LocalDateTime.of(eventDate!!, eventStartTime)
+                    btnStartTime.text = eventStart!!.getFormatted()
+                    enableConfirmIfAllSet()
+
+                }, today.hour, today.minute, false
             )
 
-            FirestoreUtils.addEvent(getPhoneNoFormatted()!!, event).addOnFailureListener {
-                toastFrag("Couldn't post your event, server error!")
-                it.printStackTrace()
-            }.addOnSuccessListener {
-                requireActivity().apply {
-                    setResult(Activity.RESULT_OK, intent)
-                    finish()
+            val eventEndTimePicker = TimePickerDialog(
+                requireContext(),
+                { _, hourOfDay, minute ->
+                    val eventEndTime = LocalTime.of(hourOfDay, minute)
+                    eventEnd = LocalDateTime.of(eventDate!!, eventEndTime)
+                    btnEndTime.text = eventEnd!!.getFormatted()
+                    enableConfirmIfAllSet()
+                }, today.hour, today.minute, false
+            )
+
+            val startDatePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+                eventDate = LocalDate.of(year, month, dayOfMonth)
+                // Now we track which button triggered datePicker 1=StartTime and 0=EndTime
+                if (showStartTimeAfterDate == 1)
+                    eventStartTimePicker.show()
+                else if (showStartTimeAfterDate == 0)
+                    eventEndTimePicker.show()
+            }, today.year, today.monthValue, today.dayOfMonth)
+
+            view.btnConfirm.setOnClickListener {
+                val intent = Intent()
+                val event = FirestoreEvent(
+                    null,
+                    userPhone,
+                    eventStart!!.toTimestamp(),
+                    eventEnd!!.toTimestamp(),
+                    "Get together with friends",
+                    venue!!.id,
+                    mutableListOf(venue!!),
+                    invitesPhoneOnly,
+                    mutableListOf(FirestoreVote(venue!!.id, mutableListOf(userPhone))),
+                    mutableListOf(),
+                    Timestamp.now()
+                )
+
+                FirestoreUtils.addEvent(getPhoneNoFormatted()!!, event).addOnFailureListener {
+                    toastFrag("Couldn't post your event, server error!")
+                    it.printStackTrace()
+                }.addOnSuccessListener {
+                    requireActivity().apply {
+                        setResult(Activity.RESULT_OK, intent)
+                        finish()
+                    }
+                }
+            }
+
+            view.btnStartTime.setOnClickListener {
+                if (eventDate == null) {
+                    // 1 means true but -1 means unset
+                    showStartTimeAfterDate = 1
+                    startDatePicker.show()
+                } else
+                    eventStartTimePicker.show()
+            }
+
+            view.btnEndTime.setOnClickListener {
+                if (eventDate == null) {
+                    // 0 means false
+                    showStartTimeAfterDate = 0
+                    startDatePicker.show()
+                } else
+                    eventEndTimePicker.show()
+            }
+
+            bottomSheet.setOnInviteSelectionListener(object :
+                SelectInvitesBottomSheet.OnInviteSelectionListener {
+
+                override fun onComplete(list: List<Invite>) {
+                    invitesPhoneOnly = list.map { it.profile.phoneNo }
+                    enableConfirmIfAllSet()
+                }
+            })
+
+            startDatePicker.setTitle("Event Date")
+            eventEndTimePicker.setTitle("Event End Time")
+            eventStartTimePicker.setTitle("Event Starting Time")
+
+
+        } else {
+            // Add venue Mode
+            vmHome.events.observe(viewLifecycleOwner) { _events ->
+                _events?.let { events ->
+
+                    val event = events.first { e -> e.id == eventId }
+
+                    view.btnEndTime.disable()
+                    view.btnStartTime.disable()
+                    view.btnInvitePeople.disable()
+
+                    view.btnEndTime.text = event.endTime.getFormatted()
+                    view.btnStartTime.text = event.startTime.getFormatted()
+
+                    view.btnInvitePeople.text = "INVITED CONTACTS (${event.invites.size})"
+
+                    btnConfirm.setOnClickListener {
+                        val intent = Intent()
+
+                        val indexOfVenueToDelete = event.venues.indexOfFirst { v ->
+                            v.addedBy == userPhone
+                        }
+                        // Delete any venue if added by this user previously
+                        event.venues.removeAt(indexOfVenueToDelete)
+                        // Add the new venue
+                        event.venues.add(venue!!)
+
+                        var newVotes: MutableList<FirestoreVote> = mutableListOf()
+
+                        vmHome.currentProfile.value?.let { currentProfile ->
+                            // Remove currentUser from all other voters Set and add it to clicked item
+                            event.votes.forEachIndexed { i, v ->
+                                val index = v.voters.indexOfFirst { p -> p.phoneNo == userPhone }
+
+                                if (index == i)
+                                    event.votes[i].voters.remove(currentProfile)
+                            }
+
+                            newVotes = event.votes.mapNotNull { v ->
+                                v.voters.remove(currentProfile)
+                                val votersList = v.voters.map { p -> p.phoneNo }
+                                // Since user changed his vote, check votes list and remove empty lists
+                                if(votersList.isEmpty())
+                                    null
+                                else
+                                    FirestoreVote(v.placeId, votersList.toMutableList())
+                            }.toMutableList()
+
+
+                            newVotes.add(FirestoreVote(venue!!.id, mutableListOf(currentProfile.phoneNo)))
+
+                        }
+
+                        newVotes.sortByDescending { fv -> fv.voters.size }
+                        val selectedVenue = newVotes.first().placeId
+
+                        FirestoreUtils.updateVenue(
+                            eventId!!, userPhone, event.venues, selectedVenue!!, newVotes
+                        ).addOnFailureListener {
+
+                            toastFrag("Couldn't update your event, server error!")
+                            it.printStackTrace()
+
+                        }.addOnSuccessListener {
+                            requireActivity().apply {
+                                setResult(Activity.RESULT_OK, intent)
+                                finish()
+                            }
+                        }
+                    }
+
                 }
             }
         }
+
     }
 
     fun onPlaceSelected(place: Place) {
 
-        venue = Venue(place.id!!, place.name!!, place.address!!, place.latLng!!.toGeoPoint())
+        venue =
+            Venue(place.id!!, userPhone, place.name!!, place.address!!, place.latLng!!.toGeoPoint())
 
         locationName.text = place.name
         address.text = place.address
@@ -193,15 +283,18 @@ class AddEventFragment : Fragment() {
         address.visible()
         hint.gone()
         isAddressSet = true
-        enableConfirmIfAllSet()
+        if (eventId == null)
+            enableConfirmIfAllSet()
+        else // Enable directly
+            btnConfirm.enable()
     }
 
     private fun enableConfirmIfAllSet() {
         btnConfirm.isEnabled =
             when {
                 !invitesPhoneOnly.isNullOrEmpty() &&
-                eventStart != null &&
-                eventEnd != null && isAddressSet -> true
+                        eventStart != null &&
+                        eventEnd != null && isAddressSet -> true
                 else -> false
             }
     }
