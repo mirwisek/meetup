@@ -53,6 +53,7 @@ class LoginActivity : AppCompatActivity() {
                 } else {
                     startActivity(Intent(this, MainActivity::class.java))
                 }
+                finish()
 
             } else {
                 // Sign in failed. If response is null the user canceled the

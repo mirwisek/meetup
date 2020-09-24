@@ -94,26 +94,26 @@ fun Context.toDp(px: Int): Int {
             / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
 }
 
-fun LiveData<UserData>.combineContacts(
-    contacts: LiveData<MutableList<Account>>,
-    callback: (MutableList<Account>, UserData) -> MutableList<Account>
-): LiveData<MutableList<Account>> {
+fun LiveData<MutableList<Profile>>.combineContacts(
+    contacts: LiveData<HashMap<String, Profile>>,
+    callback: (HashMap<String, Profile>, MutableList<Profile>) -> MutableList<Account>?
+): LiveData<MutableList<Account>?> {
 
-    val result = MediatorLiveData<MutableList<Account>>()
+    val result = MediatorLiveData<MutableList<Account>?>()
 
     // Will call only when both are not null and set
     result.addSource(this) {
-        it?.let { userData ->
+        it?.let { profiles ->
             contacts.value?.let { contactList ->
                 result.value =
-                    callback.invoke(contactList, userData)
+                    callback.invoke(contactList, profiles)
             }
         }
     }
     result.addSource(contacts) {
         it?.let { contactList ->
-            value?.let { userData ->
-                result.value = callback.invoke(contactList, userData)
+            value?.let { profiles ->
+                result.value = callback.invoke(contactList, profiles)
             }
         }
     }

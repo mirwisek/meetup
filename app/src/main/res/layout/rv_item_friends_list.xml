@@ -20,7 +20,7 @@
         tools:text="Mirwise Khan"/>
 
     <TextView
-        android:id="@+id/tvContactName"
+        android:id="@+id/tvPhone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="@id/tvFriendName"
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tvFriendName"
-        app:layout_constraintBottom_toBottomOf="@id/tvContactName"
+        app:layout_constraintBottom_toBottomOf="@id/tvPhone"
         android:text="@string/add_friend" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

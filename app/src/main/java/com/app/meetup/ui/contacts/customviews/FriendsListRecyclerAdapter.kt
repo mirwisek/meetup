@@ -42,7 +42,7 @@ class FriendsListRecyclerAdapter(context: Context): RecyclerView.Adapter<Friends
 //        }
 
         holder.name.text = account.profile.name
-        holder.contactName.text = account.profile.phoneNo
+        holder.phoneNo.text = account.profile.phoneNo
         holder.btnReaction.text = if(account.isFriend)
             ctx.getString(R.string.unfriend)
         else {
@@ -77,7 +77,7 @@ class FriendsListRecyclerAdapter(context: Context): RecyclerView.Adapter<Friends
     class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
 
         val name: TextView = view.findViewById(R.id.tvFriendName)
-        val contactName: TextView = view.findViewById(R.id.tvContactName)
+        val phoneNo: TextView = view.findViewById(R.id.tvPhone)
         val btnReaction: MaterialButton = view.findViewById(R.id.btnReaction)
     }
 

@@ -5,16 +5,20 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
-import com.app.meetup.utils.getPhoneNoFormatted
-import com.app.meetup.utils.toast
+import com.app.meetup.ui.home.isEventOngoing
+import com.app.meetup.utils.*
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
+import org.threeten.bp.LocalDateTime
 
 
 class MainActivity : AppCompatActivity() {
@@ -42,6 +46,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // FCM requires Google Play services to be installed
+        GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this)
+
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
 
         navController = findNavController(R.id.nav_host_fragment)
@@ -49,6 +56,18 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
         viewModel = ViewModelProvider(this).get(ActivityViewModel::class.java)
+
+        // If token has been saved in Sharedprefs means we couldn't update it and should do now
+        sharedPref.getString(Constants.KEY_FCM_TOKEN, null)?.let { token ->
+            getPhoneNoFormatted()?.let { phoneNo ->
+                FirestoreUtils.updateFcmToken(phoneNo, token).addOnSuccessListener {
+                    // Since we updated token, no need to store it in SharedPrefs
+                    sharedPref.edit(true) {
+                        remove(Constants.KEY_FCM_TOKEN)
+                    }
+                }
+            }
+        }
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
@@ -60,7 +79,11 @@ class MainActivity : AppCompatActivity() {
             )
 
         } else {
-            viewModel.loadContacts(getPhoneNoFormatted()!!, contentResolver, true)
+            viewModel.loadContacts(getPhoneNoFormatted(), contentResolver, true)
+        }
+
+        viewModel.allContacts.observe(this) {
+            log("Got contacts ${it.size}")
         }
     }
 

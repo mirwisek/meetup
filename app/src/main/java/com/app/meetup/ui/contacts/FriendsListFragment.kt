@@ -10,6 +10,7 @@ import com.app.meetup.*
 import com.app.meetup.ui.contacts.customviews.FriendsListRecyclerAdapter
 import com.app.meetup.utils.FirestoreUtils
 import com.app.meetup.utils.getPhoneNoFormatted
+import com.app.meetup.utils.log
 import com.app.meetup.utils.toastFrag
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
@@ -38,8 +39,11 @@ class FriendsListFragment : Fragment() {
         view.rvFriendsList.adapter = adapter
 
 
-        vmActivity.meetupContacts.observe(viewLifecycleOwner, { accounts ->
-            adapter.updateList(accounts)
+        vmActivity.newContacts.observe(viewLifecycleOwner, { accounts ->
+            log("got accs ${accounts}")
+            accounts?.let {
+                adapter.updateList(it)
+            }
         })
 
         adapter.setOnFriendReactionListener(object: FriendsListRecyclerAdapter.OnFriendReaction {

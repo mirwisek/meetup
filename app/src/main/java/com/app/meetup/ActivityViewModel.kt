@@ -2,12 +2,13 @@ package com.app.meetup
 
 import android.app.Application
 import android.content.ContentResolver
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.app.meetup.repo.Repository
 import com.app.meetup.utils.ContactUtils
-import com.app.meetup.utils.FirestoreUtils
 import com.app.meetup.utils.combineContacts
-import com.app.meetup.utils.combineProfilesWithFriends
+import com.app.meetup.utils.log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -27,85 +28,93 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     val friendRequests = MutableLiveData<MutableList<Account>>()
     val requestSent = MutableLiveData<MutableList<Account>>()
 
-    // Contacts that are on Meetup & are in user's friend list
-    val meetupContacts =
-        repo.userData.combineContacts(availableFriends) { contactListFriends, userData ->
+    // Friends become available when both UserData and Profiles are loaded
+    val newContacts =
+        friends.combineContacts(allContacts) { contactMaps, friendsList ->
 
-            val requests = mutableListOf<Account>()
-            val sentRequests = mutableListOf<Account>()
+            val profiles = repo.profiles.value!!
 
-            val filteredList = mutableListOf<Account>()
+            repo.userData.value?.let { userData ->
 
-            contactListFriends.forEach { acc ->
-                // If it is found in friends list then mark him friend (btnFriend || btnUnfriend)
-                acc.isFriend = userData.friends.any { friend -> friend == acc.profile.phoneNo }
-                acc.isRequestSent =
-                    userData.requestSent.any { friend -> friend == acc.profile.phoneNo }
-                acc.hasSentFriendRequest =
-                    userData.friendRequests.any { friend -> friend == acc.profile.phoneNo }
+                val requests = userData.friendRequests.map { req ->
+                    Account(profiles.first { p -> req == p.phoneNo }).apply {
+                        hasSentFriendRequest = true
+                    }
+                }.toMutableList()
 
-                if (acc.isFriend) {
-                    filteredList.add(acc)
-                } else if (acc.isRequestSent)
-                    sentRequests.add(acc)
-                else if (acc.hasSentFriendRequest)
-                    requests.add(acc)
-                else // Add non friends, should be able to send them friend request
-                    filteredList.add(acc)
+                val sentRequests = userData.requestSent.map { req ->
+                    Account(profiles.first { p -> req == p.phoneNo }).apply {
+                        isRequestSent = true
+                    }
+                }.toMutableList()
+
+                val myFriends = friends.value!!.map { p ->
+                    // Since the use is already a friend then don't show it twice as a contact (unfriend)
+                    contactMaps.remove(p.phoneNo)
+                    Account(p).apply {
+                        isFriend = true
+                    }
+                }.toMutableList()
+
+                // Now since we removed all friends from contacts, see if any contact is on meet up
+                val matchedContacts = profiles.mapNotNull { p ->
+                    contactMaps.getOrElse(p.phoneNo, { null })
+                }.toMutableList()
+
+                // Add new contacts as well
+                matchedContacts.forEach { p ->
+                    myFriends.add(Account(p))
+                }
+
+                friendRequests.postValue(requests)
+                requestSent.postValue(sentRequests)
+
+                myFriends
             }
-
-            friendRequests.postValue(requests)
-            requestSent.postValue(sentRequests)
-
-            filteredList
         }
 
 
     fun loadContacts(
-        phoneNo: String,
+        phoneNo: String?,
         contentResolver: ContentResolver,
         replaceCountryCode: Boolean
     ) {
-
+        // When activity is first launched  with no phoneNo and no permissions
+        if (phoneNo == null)
+            return
         viewModelScope.launch(Dispatchers.IO) {
 
             val map = ContactUtils.getAllContacts(contentResolver, replaceCountryCode)
             // If user have saved his own phoneNo, he can't add himself as friend
             map.remove(phoneNo)
             allContacts.postValue(map)
-            findFriends(phoneNo)
+//            findFriends()
         }
     }
 
 
-    private fun findFriends(phoneNo: String) {
+    private fun findFriends() {
 
-        FirestoreUtils.getProfiles().get().addOnSuccessListener { snap ->
-
-            viewModelScope.launch(Dispatchers.IO) {
-                val phoneList = allContacts.value!!.keys
-                val matchedContacts = snap.documents.filter { doc ->
-                    phoneList.any { phoneNo ->
-                        doc.id == phoneNo
-                    }
+        viewModelScope.launch(Dispatchers.IO) {
+            val phoneList = allContacts.value!!.keys
+            val profiles = repo.profiles.value!!
+            val matchedContacts = profiles.filter { p ->
+                phoneList.any { phoneNo ->
+                    p.phoneNo == phoneNo
                 }
-
-                val list = arrayListOf<Account>()
-
-                matchedContacts.forEach { doc ->
-//                    val phoneContact = allContacts.value!![doc.id]
-                    doc.toObject(Profile::class.java)?.let { profile ->
-                        list.add(Account(profile))
-                    }
-                }
-                availableFriends.postValue(list)
             }
+
+            val list = matchedContacts.map { p ->
+                Account(p)
+            }.toMutableList()
+
+            availableFriends.postValue(list)
         }
     }
 
     fun updateContactStatus(old: Account, new: Account, index: Int) {
         viewModelScope.launch {
-            meetupContacts.value?.let { contacts ->
+            newContacts.value?.let { contacts ->
 
                 if (contacts.remove(old))
                     contacts.add(index, new)

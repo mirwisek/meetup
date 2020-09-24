@@ -35,11 +35,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val callback = getLocationCallback()
     private lateinit var addEventFragment: AddEventFragment
 
-    companion object {
-        const val RC_NEW_EVENT = 125
-        const val RC_ADD_VENUE = 151
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)

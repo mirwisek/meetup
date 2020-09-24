@@ -20,4 +20,6 @@ class HomeViewModel : ViewModel() {
 
     val events = repo.events
 
+    val currentEventTitle = MutableLiveData<String>()
+
 }

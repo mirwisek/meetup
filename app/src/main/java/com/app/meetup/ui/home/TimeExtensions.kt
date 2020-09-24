@@ -68,3 +68,8 @@ val LocalTime.formatTime: String
         val startFormat = DateTimeFormatter.ofPattern("HH:mm a")
         return format(startFormat)
     }
+
+fun LocalDateTime.isEventOngoing(endTime: LocalDateTime): Boolean {
+    val now = LocalDateTime.now().minusHours(12)
+    return now.isAfter(this) && now.isBefore(endTime)
+}

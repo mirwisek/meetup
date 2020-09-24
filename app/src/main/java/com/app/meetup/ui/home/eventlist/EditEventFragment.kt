@@ -1,9 +1,11 @@
 package com.app.meetup.ui.home.eventlist
 
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -12,12 +14,15 @@ import com.app.meetup.Profile
 import com.app.meetup.R
 import com.app.meetup.ui.home.HomeViewModel
 import com.app.meetup.ui.home.addevent.AddEventFragment
+import com.app.meetup.ui.home.addevent.AddTitleBottomSheet
 import com.app.meetup.ui.home.combineTimeFormat
+import com.app.meetup.ui.home.customviews.SingleCheckMaterialButton
 import com.app.meetup.ui.home.formatDate
+import com.app.meetup.ui.home.isEventOngoing
 import com.app.meetup.ui.home.models.Venue
 import com.app.meetup.ui.home.models.Vote
-import com.app.meetup.utils.getPhoneNoFormatted
-import com.app.meetup.utils.log
+import com.app.meetup.utils.*
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import kotlinx.android.synthetic.main.fragment_add_event.view.locationName
 import kotlinx.android.synthetic.main.fragment_edit_event.view.*
@@ -28,6 +33,7 @@ class EditEventFragment : Fragment() {
     private lateinit var viewModel: ActivityViewModel
     private lateinit var vmHome: HomeViewModel
     private var hasCurrentUserVoted = false
+    private var title: String? = null
 
     companion object {
         const val KEY_EVENT_ID = "eventIdSelected"
@@ -57,9 +63,29 @@ class EditEventFragment : Fragment() {
 
         val currentProfile = vmHome.currentProfile.value!!
 
+        val bottomSheet = AddTitleBottomSheet()
+
+        bottomSheet.setOnTitleAddedListener(object : AddTitleBottomSheet.OnTitleAddedListener {
+            override fun onAdded(title: String) {
+                FirestoreUtils.updateTitle(eventId!!, title).addOnFailureListener {
+                    toastFrag("Couldn't update title of event")
+                }
+            }
+        })
+
+        view.fabEditTitle.setOnClickListener {
+//            bottomSheet.arguments = Bundle().apply {
+//                putString(AddTitleBottomSheet.KEY_TITLE, title)
+//            }
+            bottomSheet.show(parentFragmentManager, AddTitleBottomSheet.TAG)
+        }
+
         vmHome.events.observe(requireActivity(), {
             it?.let {  events ->
                 val event = events.first { e -> e.id == eventId }
+
+                title = event.eventTitle
+                vmHome.currentEventTitle.postValue(title)
 
                 view.locationName.text = event.eventTitle
                 view.guestTitle.text = "${event.invites.size} guests"
@@ -76,6 +102,10 @@ class EditEventFragment : Fragment() {
                         allVoters.add(p)
                     }
                 }
+
+                // Only organizer can edit the title
+                if(currentProfile.phoneNo != event.organizer.phoneNo)
+                    view.fabEditTitle.gone()
 
                 view.btnAddVenue.text = if(hasCurrentUserVoted) "Edit" else "New"
 
@@ -100,10 +130,47 @@ class EditEventFragment : Fragment() {
 
                 view.checkedInGroup.removeAllViews()
 
+                var hasUserCheckedAlready = false
                 event.checkedIn.forEach { profile ->
                     val chip = Chip(ctx)
                     chip.text = profile.name
                     view.checkedInGroup.addView(chip)
+
+                    if(profile.phoneNo == currentProfile.phoneNo)
+                        hasUserCheckedAlready = true
+                }
+
+                view.btnCheckIn.isChecked = hasUserCheckedAlready
+
+
+                // UI management
+                view.btnCheckIn.setOnTouchListener { v, e ->
+                    if(e.action == KeyEvent.ACTION_DOWN) {
+                        if(hasUserCheckedAlready) {
+                            toastFrag("You have already check in")
+                            true
+                        } else {
+                            if(hasCurrentUserVoted) {
+                                if(event.startTime.isEventOngoing(event.endTime)) {
+                                    v.performClick()
+                                } else {
+                                    toastFrag("You can't check in at least 12h before event start",
+                                        Toast.LENGTH_LONG)
+                                }
+                            } else
+                                toastFrag("Please vote first for a location")
+                            false
+                        }
+                    } else
+                        false
+                }
+
+                view.btnCheckIn.setOnClickListener {
+                    FirestoreUtils.checkIn(eventId!!, currentProfile.phoneNo).addOnFailureListener {
+                        toastFrag("Couldn't check in server error")
+                    }.addOnSuccessListener {
+                        hasUserCheckedAlready = true
+                    }
                 }
 
                 view.date.text = event.startTime.toLocalDate().formatDate

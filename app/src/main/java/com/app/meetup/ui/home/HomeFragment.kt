@@ -18,10 +18,12 @@ import androidx.navigation.fragment.findNavController
 import com.app.meetup.ActivityViewModel
 import com.app.meetup.MainActivity
 import com.app.meetup.R
+import com.app.meetup.ui.home.addevent.AddTitleBottomSheet
 import com.app.meetup.ui.home.addevent.MapsActivity
 import com.app.meetup.ui.home.eventlist.EditEventFragment
 import com.app.meetup.ui.home.eventlist.EventsListRecyclerAdapter
 import com.app.meetup.ui.home.models.Event
+import com.app.meetup.utils.FirestoreUtils
 import com.app.meetup.utils.getLocationRequest
 import com.app.meetup.utils.log
 import com.app.meetup.utils.toastFrag
@@ -161,20 +163,16 @@ class HomeFragment : Fragment() {
                 if (resultCode == Activity.RESULT_OK)
                     enableGPS()
             }
-            MapsActivity.RC_NEW_EVENT -> {
-                if (resultCode == Activity.RESULT_OK)
-                    toastFrag("OK")
-                else
-                    toastFrag("Got msg from maps")
-            }
         }
     }
 
     private fun onFabClicked() {
-        startActivityForResult(
-            Intent(requireActivity(), MapsActivity::class.java),
-            MapsActivity.RC_NEW_EVENT
+
+        startActivity(
+            Intent(requireActivity(), MapsActivity::class.java)
         )
+        // Reset value from EditEvents
+        vmHome.currentEventTitle.postValue(null)
     }
 
 }

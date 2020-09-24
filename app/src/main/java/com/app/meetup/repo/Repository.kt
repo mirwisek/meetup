@@ -11,10 +11,11 @@ import com.app.meetup.ui.home.models.Event
 import com.app.meetup.ui.home.models.FirestoreEvent
 import com.app.meetup.utils.combineProfilesWithFriends
 import com.app.meetup.utils.getPhoneNoFormatted
+import com.app.meetup.utils.log
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-class Repository private constructor() :CoroutineScope {
+class Repository private constructor() : CoroutineScope {
 
     val userData = MutableLiveData<UserData>()
     val profiles = MutableLiveData<MutableList<Profile>>()
@@ -25,7 +26,7 @@ class Repository private constructor() :CoroutineScope {
 
         val friendsList = mutableListOf<Profile>()
         profilesList.forEach { profile ->
-            if(userData.friends.any { friend -> friend == profile.phoneNo })
+            if (userData.friends.any { friend -> friend == profile.phoneNo })
                 friendsList.add(profile)
         }
         friendsList
@@ -51,7 +52,7 @@ class Repository private constructor() :CoroutineScope {
     }
 
     private fun fetchData() {
-        if(phoneNo == null)
+        if (phoneNo == null)
             return
         FirestoreUtils.getUserData(phoneNo!!).addSnapshotListener { snap, ex ->
             scope.launch {
@@ -73,7 +74,7 @@ class Repository private constructor() :CoroutineScope {
     }
 
     private fun fetchProfiles() {
-        if(phoneNo == null)
+        if (phoneNo == null)
             return
         FirestoreUtils.getProfiles().addSnapshotListener { snap, ex ->
             scope.launch {
@@ -96,27 +97,31 @@ class Repository private constructor() :CoroutineScope {
     }
 
     private fun fetchEvents(data: UserData) {
-        if(phoneNo == null)
+        if (phoneNo == null)
             return
 
         // We are calling this function when userData has been retrieved
         val mergedList = data.let { mData ->
             mData.eventsInvitation + mData.eventsOnGoing + mData.eventsUpcoming
         }
-        FirestoreUtils.queryEvents(mergedList).addSnapshotListener { snap, ex ->
+        if(mergedList.isEmpty())
+            return
+        FirestoreUtils.queryEvents(mergedList).addOnSuccessListener { snaps ->
             scope.launch {
-                ex?.printStackTrace()
-
-                snap?.let { doc ->
-                    try {
-                        val firestoreEvents = doc.toObjects(FirestoreEvent::class.java)
-                        val newEvents = RepoUtils.transformFirestoreEvents(
-                            firestoreEvents, profiles.value!!
-                        )
-                        events.postValue(newEvents.toMutableList())
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+//                ex?.printStackTrace()
+                try {
+                    var firestoreEvents = listOf<FirestoreEvent>()
+                    snaps?.forEach { doc ->
+                        log("Docs ${doc.documents}")
+                        firestoreEvents =
+                            firestoreEvents + doc.toObjects(FirestoreEvent::class.java)
                     }
+                    val newEvents = RepoUtils.transformFirestoreEvents(
+                        firestoreEvents.toMutableList(), profiles.value!!
+                    )
+                    events.postValue(newEvents.toMutableList())
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
         }

@@ -65,7 +65,6 @@ class FriendsRequestRecyclerAdapter(context: Context): RecyclerView.Adapter<Frie
     class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
 
         val friendName: TextView = view.findViewById(R.id.tvFriendName)
-        val contactName: TextView = view.findViewById(R.id.tvContactName)
         val phone: TextView = view.findViewById(R.id.tvPhone)
         val btnApprove: ImageButton = view.findViewById(R.id.btnApprove)
         val btnDecline: ImageButton = view.findViewById(R.id.btnDecline)

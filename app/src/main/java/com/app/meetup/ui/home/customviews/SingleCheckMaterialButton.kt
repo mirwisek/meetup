@@ -16,15 +16,38 @@ class SingleCheckMaterialButton : MaterialButton {
 
     constructor(context: Context) : super(context)
 
+    private var mListener: OnToggleListener? = null
+
     constructor(
         context: Context,
         attrs: AttributeSet?
     ) : super(context, attrs)
 
     override fun toggle() {
-        if (!isChecked) {
+//        if (!isChecked) {
+//            super.toggle()
+//        }
+        if(mListener == null)
             super.toggle()
+        else {
+            if(!mListener!!.onToggle()) {
+                super.toggle()
+            }
         }
+
     }
+
+    fun addOnToggleListener(listener: OnToggleListener ) {
+        mListener = listener
+    }
+
+    interface OnToggleListener {
+        // If true then do nothing otherwise call super
+        fun onToggle(): Boolean
+    }
+
+//    override fun onCheckedChanged(button: MaterialButton?, isChecked: Boolean) {
+//        mListener?.onCheckedChanged(button, isChecked)
+//    }
 
 }

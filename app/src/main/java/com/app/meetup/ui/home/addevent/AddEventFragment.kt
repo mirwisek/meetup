@@ -6,6 +6,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,9 @@ class AddEventFragment : Fragment() {
     private val bottomSheet = SelectInvitesBottomSheet()
     private lateinit var vmBottomSheet: BottomSheetViewModel
     private lateinit var vmHome: HomeViewModel
+
+    private val addTitleBottomSheet = AddTitleBottomSheet()
+
 
     private val userPhone = getPhoneNoFormatted()!!
 
@@ -143,7 +147,7 @@ class AddEventFragment : Fragment() {
                     userPhone,
                     eventStart!!.toTimestamp(),
                     eventEnd!!.toTimestamp(),
-                    "Get together with friends",
+                    vmHome.currentEventTitle.value!!,
                     venue!!.id,
                     mutableListOf(venue!!),
                     invitesPhoneOnly,
@@ -156,10 +160,7 @@ class AddEventFragment : Fragment() {
                     toastFrag("Couldn't post your event, server error!")
                     it.printStackTrace()
                 }.addOnSuccessListener {
-                    requireActivity().apply {
-                        setResult(Activity.RESULT_OK, intent)
-                        finish()
-                    }
+                    requireActivity().finish()
                 }
             }
 
@@ -194,6 +195,10 @@ class AddEventFragment : Fragment() {
             eventEndTimePicker.setTitle("Event End Time")
             eventStartTimePicker.setTitle("Event Starting Time")
 
+
+            Handler().postDelayed({
+                addTitleBottomSheet.show(parentFragmentManager, AddTitleBottomSheet.TAG)
+            }, 600)
 
         } else {
             // Add venue Mode

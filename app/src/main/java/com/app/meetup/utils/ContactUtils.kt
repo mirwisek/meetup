@@ -3,6 +3,7 @@ package com.app.meetup.utils
 import android.content.ContentResolver
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.ContactsContract.Contacts.*
+import android.telephony.PhoneNumberUtils
 import com.app.meetup.Profile
 
 object ContactUtils {
@@ -31,14 +32,18 @@ object ContactUtils {
                         null
                     )
                     while(phoneCursor != null && phoneCursor.moveToNext()) {
-                        val phoneNo = phoneCursor.getString(phoneCursor.getColumnIndex(Phone.NUMBER))
+                        val no = phoneCursor.getString(phoneCursor.getColumnIndex(Phone.NUMBER))
 
-                        val formattedPhone = if(replaceCountryCode)
-                            phoneNo.replace("+92", "0")
-                        else
-                            phoneNo
+                        val phoneNo = PhoneNumberUtils.stripSeparators(no)
 
-                        hashMap[formattedPhone] = Profile(name, formattedPhone)
+                        if(phoneNo.length > 9) {
+                            val formattedPhone = if(replaceCountryCode)
+                                phoneNo.replace("+92", "0")
+                            else
+                                phoneNo
+
+                            hashMap[formattedPhone] = Profile(name, formattedPhone)
+                        }
                     }
                     phoneCursor?.close()
                 }

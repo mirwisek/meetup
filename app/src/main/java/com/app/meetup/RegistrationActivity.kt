@@ -35,6 +35,7 @@ class RegistrationActivity : AppCompatActivity() {
                 }.addOnSuccessListener {
                     progress.gone()
                     startActivity(Intent(applicationContext, MainActivity::class.java))
+                    finish()
                 }
             } else {
                 toast("User name can't be empty")
