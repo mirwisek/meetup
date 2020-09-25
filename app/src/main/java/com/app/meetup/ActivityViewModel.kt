@@ -17,6 +17,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     private val repo = Repository.getInstance()
 
     val allContacts = MutableLiveData<HashMap<String, Profile>>()
+    val empty = repo.empty
 
     // Contacts that are on Meetup, these accounts has unset @param isFriend
     val availableFriends = MutableLiveData<MutableList<Account>>()
@@ -62,8 +63,14 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
                 }.toMutableList()
 
                 // Add new contacts as well
-                matchedContacts.forEach { p ->
-                    myFriends.add(Account(p))
+                matchedContacts.forEachIndexed { i, p ->
+                    val isInRequests = requests.any { a -> a.profile.phoneNo == p.phoneNo }
+                    val isInSentRequests = sentRequests.any { a -> a.profile.phoneNo == p.phoneNo }
+                    // Don't show in friends if user has already sent request or use has sent one
+                    if(isInRequests || isInSentRequests)
+                        matchedContacts.removeAt(i)
+                    else
+                        myFriends.add(Account(p))
                 }
 
                 friendRequests.postValue(requests)

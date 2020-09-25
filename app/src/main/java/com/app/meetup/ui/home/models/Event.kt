@@ -10,6 +10,7 @@ data class Event(
     var endTime: LocalDateTime,
     var eventTitle: String,
     var selectedVenue: Venue,
+    var bill: String,
     var venues: MutableList<Venue> = mutableListOf(),
     var invites: List<Profile> = mutableListOf(),
     var votes: MutableList<Vote> = mutableListOf(),

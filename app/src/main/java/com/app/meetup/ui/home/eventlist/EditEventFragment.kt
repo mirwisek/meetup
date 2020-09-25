@@ -34,6 +34,7 @@ class EditEventFragment : Fragment() {
     private lateinit var vmHome: HomeViewModel
     private var hasCurrentUserVoted = false
     private var title: String? = null
+    private val addBill = AddBillBottomSheet()
 
     companion object {
         const val KEY_EVENT_ID = "eventIdSelected"
@@ -168,6 +169,8 @@ class EditEventFragment : Fragment() {
                         false
                 }
 
+                vmHome.checkedInSize.postValue(event.checkedIn.size)
+
                 view.btnCheckIn.setOnClickListener {
                     FirestoreUtils.checkIn(eventId!!, currentProfile.phoneNo).addOnFailureListener {
                         toastFrag("Couldn't check in server error")
@@ -175,6 +178,36 @@ class EditEventFragment : Fragment() {
                         hasUserCheckedAlready = true
                     }
                 }
+
+                view.btnBill.setOnClickListener {
+
+                    if(event.checkedIn.size > 1) {
+                        // Bill is unset
+                        if(event.bill.contentEquals("0")) {
+                            addBill.show(parentFragmentManager, AddBillBottomSheet.TAG)
+                        } else {
+                            toastFrag("Bill of Rs. ${event.bill} has been already paid")
+                        }
+                    } else {
+                        toastFrag("Bill can only be paid when checked in people are more than 1")
+                    }
+                }
+
+                addBill.setOnFilledListener(object: AddBillBottomSheet.OnFilledListener {
+
+                    override fun onAdded(total: String) {
+
+                        FirestoreUtils.updateBill(eventId!!, total).addOnFailureListener {
+                            toastFrag("Couldn't send bill to checked in guests")
+                        }.addOnSuccessListener {
+                            toastFrag("Sent bill to all checked in guests")
+                            // Update bill manually since we can't query bills again and we
+                            // don't have a snapshot of the events
+                            log("Setting ${event.bill} to $total")
+                            event.bill = total
+                        }
+                    }
+                })
 
                 view.date.text = event.startTime.toLocalDate().formatDate
 
@@ -185,6 +218,7 @@ class EditEventFragment : Fragment() {
 
                     override fun onClicked(vote: Vote, index: Int) {
 
+                        log("Voters list before ${event.votes}")
                         vmHome.currentProfile.value?.let { currentProfile ->
                             // Remove currentUser from all other voters Set and add it to clicked item
                             event.votes.forEachIndexed { i, v ->
@@ -193,7 +227,13 @@ class EditEventFragment : Fragment() {
                                 else
                                     v.voters.remove(currentProfile)
                             }
-                            adapter.updateList(event)
+                            FirestoreUtils.updateVote(event).addOnFailureListener {
+                                toastFrag("Couldn't cast vote")
+                                it.printStackTrace()
+                            }.addOnSuccessListener {
+                                adapter.updateList(event)
+                                log("Voters list ${event.votes}")
+                            }
                         }
                     }
 

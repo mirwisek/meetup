@@ -69,9 +69,7 @@ class AddEventFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        val root = inflater.inflate(R.layout.fragment_add_event, container, false)
-
-        return root
+        return inflater.inflate(R.layout.fragment_add_event, container, false)
     }
 
     @SuppressLint("SetTextI18n")
@@ -141,7 +139,7 @@ class AddEventFragment : Fragment() {
             }, today.year, today.monthValue, today.dayOfMonth)
 
             view.btnConfirm.setOnClickListener {
-                val intent = Intent()
+
                 val event = FirestoreEvent(
                     null,
                     userPhone,
@@ -149,6 +147,7 @@ class AddEventFragment : Fragment() {
                     eventEnd!!.toTimestamp(),
                     vmHome.currentEventTitle.value!!,
                     venue!!.id,
+                    "0",
                     mutableListOf(venue!!),
                     invitesPhoneOnly,
                     mutableListOf(FirestoreVote(venue!!.id, mutableListOf(userPhone))),
@@ -201,6 +200,7 @@ class AddEventFragment : Fragment() {
             }, 600)
 
         } else {
+
             // Add venue Mode
             vmHome.events.observe(viewLifecycleOwner) { _events ->
                 _events?.let { events ->
@@ -210,6 +210,7 @@ class AddEventFragment : Fragment() {
                     view.btnEndTime.disable()
                     view.btnStartTime.disable()
                     view.btnInvitePeople.disable()
+
 
                     view.btnEndTime.text = event.endTime.getFormatted()
                     view.btnStartTime.text = event.startTime.getFormatted()

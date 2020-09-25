@@ -10,6 +10,8 @@ import com.app.meetup.Invite
 import com.app.meetup.R
 import com.app.meetup.ui.home.customviews.BaseBottomSheet
 import com.app.meetup.ui.home.customviews.InviteSelectionAdapter
+import com.app.meetup.utils.gone
+import com.app.meetup.utils.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.bottom_sheet_invite_selection.view.*
 
@@ -40,9 +42,18 @@ class SelectInvitesBottomSheet : BaseBottomSheet() {
         adapter = InviteSelectionAdapter(requireContext())
         view.rvInvites.adapter = adapter
 
+        if(adapter.itemCount == 0){
+            view.placeHolder.visible()
+        }
+
         viewModel.inviteList.observe(viewLifecycleOwner,  { list ->
-            invites = list.toMutableList()
-            adapter.updateList(invites!!)
+            if(list.isEmpty()) {
+                view.placeHolder.visible()
+            } else {
+                view.placeHolder.gone()
+                invites = list.toMutableList()
+                adapter.updateList(invites!!)
+            }
         })
 
         adapter.setOnClickListener(object: InviteSelectionAdapter.OnItemClickListener {

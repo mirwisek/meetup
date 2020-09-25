@@ -1,13 +1,14 @@
 package com.app.meetup
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.app.meetup.utils.FirestoreUtils
-import com.app.meetup.utils.gone
-import com.app.meetup.utils.toast
-import com.app.meetup.utils.visible
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
+import com.app.meetup.ui.notifications.models.Notification
+import com.app.meetup.utils.*
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import kotlinx.android.synthetic.main.activity_registration.*
 
 class RegistrationActivity : AppCompatActivity() {
@@ -26,16 +27,21 @@ class RegistrationActivity : AppCompatActivity() {
                 // Don't want international code, as contacts no are usually starting with '0'
                 val phone = user.phoneNumber!!.replace("+92", "0")
 
-                FirestoreUtils.getProfile(phone).set(
-                    Profile(name, phone)
-                ).continueWith {
-                    // Create user data document as well
-                    FirestoreUtils.getUserData(phone).set(UserData())
+                // Need a dummy notification to create a document, so we can update notifications
+                // without document exist exception
+                val notification = Notification("Welcome to Meeup",
+                    "You have created meetup account", false, Timestamp.now())
 
-                }.addOnSuccessListener {
+                FirestoreUtils.createUser(Profile(name, phone), notification).addOnSuccessListener {
                     progress.gone()
+                    sharedPref.edit {
+                        putBoolean(Constants.KEY_REGISTRATION_COMPLETE, true)
+                    }
                     startActivity(Intent(applicationContext, MainActivity::class.java))
                     finish()
+                }.addOnFailureListener {
+                    toast("Couldn't create your account, please try again later")
+                    it.printStackTrace()
                 }
             } else {
                 toast("User name can't be empty")

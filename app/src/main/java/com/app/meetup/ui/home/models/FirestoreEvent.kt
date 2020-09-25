@@ -9,6 +9,7 @@ data class FirestoreEvent(
     var endTime: Timestamp? = null,
     var eventTitle: String? = null,
     var selectedVenueId: String? = null,
+    var bill: String? = null,
     var venues: List<Venue> = mutableListOf(),
     var invites: List<String> = mutableListOf(),
     var votes: MutableList<FirestoreVote> = mutableListOf(),

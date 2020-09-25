@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.app.meetup.repo.Repository
+import com.app.meetup.utils.FirestoreUtils
+import com.app.meetup.utils.getPhoneNoFormatted
 import com.app.meetup.utils.log
 import com.app.meetup.utils.showSnackbar
 import com.firebase.ui.auth.AuthUI
@@ -49,11 +51,19 @@ class LoginActivity : AppCompatActivity() {
 
             if (resultCode == Activity.RESULT_OK && response != null) {
                 // Successfully signed in
-                if(response.isNewUser) {
-                    startActivity(Intent(this, RegistrationActivity::class.java))
-                } else {
-                    startActivity(Intent(this, MainActivity::class.java))
-                }
+//                if(response.isNewUser) {
+                    FirestoreUtils.getUserData(getPhoneNoFormatted()!!).get().addOnSuccessListener {
+                        if(it.contains("friends")) {
+                            startActivity(Intent(this, MainActivity::class.java))
+                        } else {
+                            startActivity(Intent(this, RegistrationActivity::class.java))
+                        }
+                    }.addOnFailureListener {
+                        startActivity(Intent(this, MainActivity::class.java))
+                    }
+//                } else {
+//                    startActivity(Intent(this, MainActivity::class.java))
+//                }
                 Repository.createNewInstance()
                 finish()
 

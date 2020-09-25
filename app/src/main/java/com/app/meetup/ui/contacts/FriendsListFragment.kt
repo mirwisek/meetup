@@ -35,16 +35,25 @@ class FriendsListFragment : Fragment() {
         val adapter = FriendsListRecyclerAdapter(requireContext())
         view.rvFriendsList.adapter = adapter
 
+        vmActivity.empty.observe(viewLifecycleOwner) {
+            it?.let { map ->
+                map[Constants.USERDATA]?.let { v ->
+                    if(v) {
+                        view.placeHolder.visible()
+                    }
+                }
+            }
+        }
+
 
         vmActivity.newContacts.observe(viewLifecycleOwner, { accounts ->
-            log("got accs ${accounts}")
             accounts?.let {
                 if(it.isEmpty())
                     view.placeHolder.visible()
                 else {
                     view.placeHolder.gone()
-                    adapter.updateList(it)
                 }
+                adapter.updateList(it)
             }
         })
 

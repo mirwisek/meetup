@@ -4,9 +4,14 @@ import androidx.lifecycle.viewModelScope
 import com.app.meetup.Profile
 import com.app.meetup.ui.home.models.Event
 import com.app.meetup.ui.home.models.FirestoreEvent
+import com.app.meetup.ui.home.models.FirestoreVote
 import com.app.meetup.ui.home.models.Vote
 import com.app.meetup.ui.home.toLocalDateTime
 import kotlinx.coroutines.launch
+
+/*
+ * Mapping FirestoreEvents to Events
+ */
 
 object RepoUtils {
 
@@ -23,6 +28,7 @@ object RepoUtils {
                 fsEvent.endTime!!.toLocalDateTime(),
                 fsEvent.eventTitle!!,
                 fsEvent.venues.first { v -> fsEvent.selectedVenueId == v.id },
+                fsEvent.bill!!,
                 createdAt = fsEvent.createdAt!!.toLocalDateTime()
             )
 
@@ -46,5 +52,15 @@ object RepoUtils {
             e
         }
         return mEvents
+    }
+
+    fun toFirestoreVote(votes: MutableList<Vote>): MutableList<FirestoreVote> {
+        val list = mutableListOf<FirestoreVote>()
+
+        votes.forEach {  vote ->
+            val voters = vote.voters.map { it.phoneNo }
+            list.add(FirestoreVote(vote.placeId, voters.toMutableList()))
+        }
+        return list
     }
 }

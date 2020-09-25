@@ -39,10 +39,20 @@ class FriendsRequestsFragment : Fragment() {
                     view.placeHolder.visible()
                 else {
                     view.placeHolder.gone()
-                    adapter.updateList(accounts)
                 }
+                adapter.updateList(accounts)
             }
         })
+
+        vmActivity.empty.observe(viewLifecycleOwner) {
+            it?.let { map ->
+                map[Constants.USERDATA]?.let { v ->
+                    if(v) {
+                        view.placeHolder.visible()
+                    }
+                }
+            }
+        }
 
         adapter.setOnReactionListener(object: FriendsRequestRecyclerAdapter.OnRequestInteraction {
 

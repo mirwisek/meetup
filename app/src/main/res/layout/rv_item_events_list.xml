@@ -94,6 +94,17 @@
             android:textSize="16sp"
             tools:text="Mirwise Khan"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDelete"
+            android:layout_width="60dp"
+            android:layout_height="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:layout_constraintEnd_toEndOf="@id/guideEnd"
+            app:layout_constraintBottom_toBottomOf="@id/tvOrganizerName"
+            app:layout_constraintTop_toTopOf="@id/tvOrganizerHint"
+            app:icon="@drawable/ic_delete"/>
+
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideStart"

@@ -19,6 +19,7 @@ import com.app.meetup.utils.*
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.activity_main.*
 import org.threeten.bp.LocalDateTime
 
@@ -37,7 +38,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
+        val isRegistrationComplete =
+            sharedPref.getBoolean(Constants.KEY_REGISTRATION_COMPLETE, false)
+
         val currentUser = FirebaseAuth.getInstance().currentUser
+
         if (currentUser == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()

@@ -18,6 +18,8 @@
             android:minHeight="?actionBarSize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:titleTextColor="@color/white"
+            app:subtitleTextColor="@color/white"
             app:layout_scrollFlags="scroll|enterAlways|snap" />
 
             <com.google.android.material.tabs.TabLayout

@@ -2,6 +2,7 @@ package com.app.meetup.ui.home.eventlist
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.app.meetup.R
 import com.app.meetup.ui.home.combineFormat
 import com.app.meetup.ui.home.models.Event
+import com.app.meetup.utils.log
+import com.google.android.material.button.MaterialButton
+import java.lang.Exception
 
 class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsListRecyclerAdapter.ViewHolder>() {
 
@@ -48,6 +52,21 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
         holder.itemView.setOnClickListener {
             clickListener?.onClicked(event, position)
         }
+
+        holder.delete.setOnClickListener {
+            holder.itemView.alpha = 0.7F
+            holder.delete.isEnabled = false
+            clickListener?.onDeleted(event, position)
+            try {
+                Handler().postDelayed({
+                    holder.delete.isEnabled = true
+                    holder.itemView.alpha = 1F
+                }, 1000)
+            } catch (e: Exception) {
+
+                log("Handler exception in enabling delete")
+            }
+        }
     }
 
     fun setOnItemClickListener(listener: OnItemClickListener) {
@@ -61,6 +80,8 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
         val eventTime: TextView = view.findViewById(R.id.tvEventTime)
         val organizerName: TextView = view.findViewById(R.id.tvOrganizerName)
         val image: ImageView = view.findViewById(R.id.eventPlaceImage)
+
+        val delete: MaterialButton = view.findViewById(R.id.btnDelete)
         val container: View = view.findViewById(R.id.container)
     }
 
@@ -72,5 +93,6 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
 
     interface OnItemClickListener {
         fun onClicked(event: Event, index: Int)
+        fun onDeleted(event: Event, index: Int)
     }
 }

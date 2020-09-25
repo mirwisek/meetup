@@ -13,12 +13,11 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.FragmentNavigatorDestinationBuilder
 import androidx.navigation.fragment.findNavController
 import com.app.meetup.ActivityViewModel
 import com.app.meetup.MainActivity
 import com.app.meetup.R
-import com.app.meetup.ui.home.addevent.AddTitleBottomSheet
+import com.app.meetup.repo.Repository
 import com.app.meetup.ui.home.addevent.MapsActivity
 import com.app.meetup.ui.home.eventlist.EditEventFragment
 import com.app.meetup.ui.home.eventlist.EventsListRecyclerAdapter
@@ -70,14 +69,44 @@ class HomeFragment : Fragment() {
                     })
             }
 
+            override fun onDeleted(event: Event, index: Int) {
+                FirestoreUtils.deleteEvent(event).addOnFailureListener {
+                    toastFrag("Couldn't delete event, please try again later")
+                    it.printStackTrace()
+                }.addOnSuccessListener {
+                    vmHome.events.value!!.remove(event)
+                    Repository.getInstance().updateEventsFromUI(vmHome.events.value!!)
+                    toastFrag("Event delete and invited guests notified")
+                }
+            }
+
         })
 
         vmHome.events.observe(viewLifecycleOwner, {
             it?.let { list ->
                 view.progressHome.gone()
-                adapter.updateList(list)
+                if(list.isEmpty()) {
+                    view.placeHolder.text = getString(R.string.no_events)
+                    view.placeHolder.visible()
+                } else {
+                    view.placeHolder.gone()
+                    adapter.updateList(list)
+                }
             }
         })
+
+        vmHome.errors.observe(viewLifecycleOwner) {
+            it?.let { map ->
+                log("maps $map")
+                map[Constants.EVENTS]?.let { value ->
+                    if(value) {
+                        view.placeHolder.text = getString(R.string.error_events)
+                        view.placeHolder.visible()
+                        view.placeHolder.gone()
+                    }
+                }
+            }
+        }
 
         view.fabAdd.setOnClickListener {
             if (hasLocationPermission()) {

@@ -203,35 +203,53 @@
         app:srcCompat="@drawable/ic_edit"
         app:tint="@color/white" />
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_gravity="bottom"
         android:gravity="bottom">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCheckIn"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:layout_marginEnd="10dp"
-            android:text="Check In"
-            android:checkable="true"
-            android:textSize="@dimen/btn_event_edit_text_size"
-            app:iconGravity="start" />
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAddVenue"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="10dp"
-            android:text="New"
-            android:textSize="@dimen/btn_event_edit_text_size"
-            app:icon="@drawable/ic_add_location"
-            app:iconGravity="end" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCheckIn"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Check In"
+                android:checkable="true"
+                android:textSize="@dimen/btn_event_edit_text_size"
+                app:iconGravity="start" />
 
-    </RelativeLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBill"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:text="Send Bill"
+                android:checkable="false"
+                android:textSize="@dimen/btn_event_edit_text_size"
+                app:iconGravity="start" />
+
+            <com.app.meetup.ui.home.customviews.SingleCheckMaterialButton
+                android:id="@+id/btnAddVenue"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="10dp"
+                android:checkable="false"
+                android:text="New"
+                android:textSize="@dimen/btn_event_edit_text_size"
+                app:icon="@drawable/ic_add_location"
+                app:iconGravity="end" />
+
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+    </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

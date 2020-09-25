@@ -24,16 +24,18 @@ class SingleCheckMaterialButton : MaterialButton {
     ) : super(context, attrs)
 
     override fun toggle() {
+        // Do nothing
+        return
 //        if (!isChecked) {
 //            super.toggle()
 //        }
-        if(mListener == null)
-            super.toggle()
-        else {
-            if(!mListener!!.onToggle()) {
-                super.toggle()
-            }
-        }
+//        if(mListener == null)
+//            super.toggle()
+//        else {
+//            if(!mListener!!.onToggle()) {
+//                super.toggle()
+//            }
+//        }
 
     }
 

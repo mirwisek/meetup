@@ -81,7 +81,8 @@ internal fun View.setBackgroundTintCompat(@ColorRes color: Int) = ViewCompat.set
 
 internal fun Context.getColorCompat(@ColorRes color: Int) = ContextCompat.getColor(this, color)
 
-fun Context.getDrawableCompat(@DrawableRes drawable: Int) = ContextCompat.getDrawable(this, drawable)
+fun Context.getDrawableCompat(@DrawableRes drawable: Int) =
+    ContextCompat.getDrawable(this, drawable)
 
 
 fun Context.toPx(dp: Int): Int {
@@ -177,3 +178,8 @@ fun getLocationRequest(): LocationRequest {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
     }
 }
+
+val Float.priceFormat: String
+    get() {
+        return "%.2f".format(this)
+    }

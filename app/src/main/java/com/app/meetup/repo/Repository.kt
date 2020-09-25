@@ -5,15 +5,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.app.meetup.Account
 import com.app.meetup.Profile
-import com.app.meetup.utils.FirestoreUtils
 import com.app.meetup.UserData
 import com.app.meetup.ui.home.models.Event
 import com.app.meetup.ui.home.models.FirestoreEvent
 import com.app.meetup.ui.notifications.models.Notification
 import com.app.meetup.ui.notifications.models.NotificationsList
-import com.app.meetup.utils.combineProfilesWithFriends
-import com.app.meetup.utils.getPhoneNoFormatted
-import com.app.meetup.utils.log
+import com.app.meetup.utils.*
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
@@ -25,6 +22,14 @@ class Repository private constructor() : CoroutineScope {
     val currentProfile = MutableLiveData<Profile>()
     val events = MutableLiveData<MutableList<Event>>()
     val notifications = MutableLiveData<NotificationsList>()
+
+    var errors = MutableLiveData<HashMap<String, Boolean>>().apply {
+        postValue(hashMapOf())
+    }
+
+    var empty = MutableLiveData<HashMap<String, Boolean>>().apply {
+        postValue(hashMapOf())
+    }
 
     val friends = userData.combineProfilesWithFriends(profiles) { profilesList, userData ->
 
@@ -62,21 +67,36 @@ class Repository private constructor() : CoroutineScope {
         }
     }
 
+    fun updateEventsFromUI(e: MutableList<Event>) {
+        events.postValue(e)
+    }
+
     private fun fetchData() {
         if (phoneNo == null)
             return
+
         FirestoreUtils.getUserData(phoneNo!!).addSnapshotListener { snap, ex ->
             scope.launch {
-                ex?.printStackTrace()
+                ex?.let {
+                    it.printStackTrace()
+                    errors.value!![Constants.USERDATA] = true
+                }
 
                 snap?.let { doc ->
+
                     try {
                         val data = doc.toObject(UserData::class.java)
                         userData.postValue(data)
-                        // Only Retrieve the required events from Fb, not all
-                        data?.let { fetchEvents(it) }
 
+                        // Only Retrieve the required events from Fb, not all
+
+                        if(data == null) {
+                            empty.value!![Constants.USERDATA] = true
+                            events.postValue(mutableListOf())
+                        } else
+                            fetchEvents(data)
                     } catch (e: Exception) {
+                        errors.value!![Constants.USERDATA] = true
                         e.printStackTrace()
                     }
                 }
@@ -89,17 +109,27 @@ class Repository private constructor() : CoroutineScope {
             return
         FirestoreUtils.getProfiles().addSnapshotListener { snap, ex ->
             scope.launch {
-                ex?.printStackTrace()
+                ex?.let {
+                    it.printStackTrace()
+                    log("Profile exceptio n ${it.message}")
+                    errors.value!![Constants.PROFILES] = true
+                }
 
                 snap?.let { doc ->
                     try {
                         val _profiles = doc.toObjects(Profile::class.java)
                         profiles.postValue(_profiles)
-                        val cProfile = _profiles.first { p ->
-                            p.phoneNo == phoneNo
+                        var cProfile: Profile? = null
+                        try {
+                            cProfile = _profiles.first { p ->
+                                p.phoneNo == phoneNo
+                            }
+                        } catch (e: NoSuchElementException) {
+                            // do nothing
                         }
                         currentProfile.postValue(cProfile)
                     } catch (e: Exception) {
+                        errors.value!![Constants.PROFILES] = true
                         e.printStackTrace()
                     }
                 }
@@ -117,21 +147,60 @@ class Repository private constructor() : CoroutineScope {
         }
 
         if(mergedList.isEmpty()) {
+            log("Events lsit is empty")
             events.postValue(mutableListOf())
             return
         }
-        FirestoreUtils.queryEvents(mergedList).addOnSuccessListener { snaps ->
+        // Woulnd't update items instantly
+//        FirestoreUtils.queryEvents(mergedList).addOnSuccessListener { snaps ->
+//            scope.launch {
+//
+//                try {
+//                    var firestoreEvents = listOf<FirestoreEvent>()
+//                    snaps?.forEach { doc ->
+//                        firestoreEvents =
+//                            firestoreEvents + doc.toObjects(FirestoreEvent::class.java)
+//                    }
+//                    val newEvents = RepoUtils.transformFirestoreEvents(
+//                        firestoreEvents.toMutableList(), profiles.value!!
+//                    )
+//                    log("New events ${newEvents}")
+//                    events.postValue(newEvents.toMutableList())
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
+//            }
+//        }.addOnFailureListener {
+//            it.printStackTrace()
+//            errors.value!![Constants.EVENTS] = true
+//            events.postValue(mutableListOf())
+//        }
+
+        FirestoreUtils.getEvents().addSnapshotListener { snaps, ex ->
             scope.launch {
-//                ex?.printStackTrace()
+
                 try {
-                    var firestoreEvents = listOf<FirestoreEvent>()
+
+                    ex?.let {
+                        it.printStackTrace()
+                        errors.value!![Constants.EVENTS] = true
+                        events.postValue(mutableListOf())
+                    }
+
+                    var firestoreEvents = mutableListOf<FirestoreEvent>()
                     snaps?.forEach { doc ->
-                        firestoreEvents =
-                            firestoreEvents + doc.toObjects(FirestoreEvent::class.java)
+
+                        mergedList.forEach { q ->
+                            if(doc.id == q) {
+                                firestoreEvents.add(doc.toObject(FirestoreEvent::class.java))
+                            }
+                        }
+
                     }
                     val newEvents = RepoUtils.transformFirestoreEvents(
-                        firestoreEvents.toMutableList(), profiles.value!!
+                        firestoreEvents, profiles.value!!
                     )
+                    log("New events ${newEvents}")
                     events.postValue(newEvents.toMutableList())
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -148,7 +217,10 @@ class Repository private constructor() : CoroutineScope {
 
         FirestoreUtils.getNotifications(phoneNo!!).addSnapshotListener { snap, ex ->
             scope.launch {
-                ex?.printStackTrace()
+                ex?.let {
+                    it.printStackTrace()
+                    errors.value!![Constants.NOTIFICATION] = true
+                }
 
                 val map = NotificationsList(hashMapOf())
 

@@ -16,10 +16,15 @@ class HomeViewModel : ViewModel() {
     val friends = repo.friends
     val profiles = repo.profiles
 
+    val errors = repo.errors
+
     val currentProfile = repo.currentProfile
 
     val events = repo.events
 
     val currentEventTitle = MutableLiveData<String>()
+
+    // For AddBillBottomSheet
+    val checkedInSize = MutableLiveData<Int>()
 
 }

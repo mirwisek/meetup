@@ -11,7 +11,6 @@ import com.app.meetup.ui.home.HomeViewModel
 import com.app.meetup.ui.home.customviews.BaseBottomSheet
 import com.app.meetup.utils.toastFrag
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.android.synthetic.main.bottom_sheet_add_title.*
 import kotlinx.android.synthetic.main.bottom_sheet_add_title.view.*
 import kotlinx.android.synthetic.main.bottom_sheet_invite_selection.view.btnDone
 
@@ -42,8 +41,8 @@ class AddTitleBottomSheet : BaseBottomSheet() {
 
         vmHome.currentEventTitle.observe(viewLifecycleOwner) {
             it?.let {  title ->
-                view.textTitle.setText(title)
-                view.textTitle.selectAll()
+                view.textBillAmount.setText(title)
+                view.textBillAmount.selectAll()
             }
         }
 
@@ -56,12 +55,12 @@ class AddTitleBottomSheet : BaseBottomSheet() {
 
 
         view.btnDone.setOnClickListener {
-            val title = view.textTitle.text.toString()
+            val title = view.textBillAmount.text.toString()
             if(title.isEmpty())
                 toastFrag("Title can't be empty")
             else {
                 vmHome.currentEventTitle.postValue(title)
-                listener?.onAdded(view.textTitle.text.toString())
+                listener?.onAdded(view.textBillAmount.text.toString())
                 dismiss()
             }
 
