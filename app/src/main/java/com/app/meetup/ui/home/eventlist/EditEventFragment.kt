@@ -152,14 +152,15 @@ class EditEventFragment : Fragment() {
                             true
                         } else {
                             if(hasCurrentUserVoted) {
-                                if(event.startTime.isEventOngoing(event.endTime)) {
+
+//                                if(event.startTime.isEventOngoing(event.endTime)) {
                                     v.performClick()
                                     false
-                                } else {
-                                    toastFrag("You can't check in at least 12h before event start",
-                                        Toast.LENGTH_LONG)
-                                    true
-                                }
+//                                } else {
+//                                    toastFrag("You can't check in at least 12h before event start",
+//                                        Toast.LENGTH_LONG)
+//                                    true
+//                                }
                             } else {
                                 toastFrag("Please vote first for a location")
                                 true
