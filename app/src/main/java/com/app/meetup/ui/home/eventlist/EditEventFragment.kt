@@ -182,15 +182,16 @@ class EditEventFragment : Fragment() {
 
                 view.btnBill.setOnClickListener {
 
-                    if(event.checkedIn.size > 1) {
+                    if(event.checkedIn.isNotEmpty()) {
                         // Bill is unset
-                        if(event.bill.contentEquals("0")) {
+//                        if(event.bill.contentEquals("0")) {
                             addBill.show(parentFragmentManager, AddBillBottomSheet.TAG)
-                        } else {
-                            toastFrag("Bill of Rs. ${event.bill} has been already paid")
-                        }
+//                        } else {
+//                            toastFrag("Bill of Rs. ${event.bill} has been already paid")
+//                        }
                     } else {
-                        toastFrag("Bill can only be paid when checked in people are more than 1")
+                        toastFrag("Bill can only be paid when at least one person checks in")
+//                        toastFrag("Bill can only be paid when checked in people are more than 1")
                     }
                 }
 
