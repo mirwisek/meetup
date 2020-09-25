@@ -111,7 +111,7 @@ class EditEventFragment : Fragment() {
                 view.btnAddVenue.text = if(hasCurrentUserVoted) "Edit" else "New"
 
                 // Invites doesn't contain (Organizer but votes contain organizer) that's why +1
-                val diffVotes = abs(event.invites.size - allVoters.size ) + 1
+                val diffVotes = abs((event.invites.size + 1) - allVoters.size )
 
                 view.pendingVotesSubtitle.text = "${allVoters.size} responded, $diffVotes awaiting"
                 view.guestSubtitle.text = "${allVoters.size - 1} responded, $diffVotes awaiting"
