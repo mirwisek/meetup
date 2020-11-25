@@ -27,6 +27,10 @@ object FirestoreUtils {
         return db.collection("profiles").document(phoneNo)
     }
 
+    fun getInviteTemplate(): DocumentReference {
+        return db.collection("static").document("inviteMessage")
+    }
+
     fun getUserData(phoneNo: String): DocumentReference {
         return db.collection("users").document(phoneNo)
     }

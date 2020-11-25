@@ -1,19 +1,25 @@
 package com.app.meetup.ui.contacts
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.app.meetup.*
+import com.app.meetup.Account
+import com.app.meetup.ActivityViewModel
+import com.app.meetup.R
 import com.app.meetup.ui.contacts.customviews.FriendsListRecyclerAdapter
 import com.app.meetup.utils.*
 import kotlinx.android.synthetic.main.fragment_friends_list.view.*
 
+
 class FriendsListFragment : Fragment() {
 
     private lateinit var vmActivity: ActivityViewModel
+    private var inviteMessage: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,7 +52,7 @@ class FriendsListFragment : Fragment() {
         }
 
 
-        vmActivity.newContacts.observe(viewLifecycleOwner, { accounts ->
+        vmActivity.invitesList.observe(viewLifecycleOwner) { accounts ->
             accounts?.let {
                 if(it.isEmpty())
                     view.placeHolder.visible()
@@ -55,9 +61,13 @@ class FriendsListFragment : Fragment() {
                 }
                 adapter.updateList(it)
             }
-        })
+        }
 
-        adapter.setOnFriendReactionListener(object: FriendsListRecyclerAdapter.OnFriendReaction {
+        vmActivity.inviteTemplate.observe(viewLifecycleOwner) { msg ->
+            inviteMessage = msg ?: getString(R.string.default_invite_msg)
+        }
+
+        adapter.setOnFriendReactionListener(object : FriendsListRecyclerAdapter.OnFriendReaction {
 
             override fun onAddedFriend(account: Account, index: Int) {
                 FirestoreUtils.addFriend(getPhoneNoFormatted()!!, account.profile.phoneNo)
@@ -79,6 +89,13 @@ class FriendsListFragment : Fragment() {
                         toastFrag("Couldn't unfriend, server problem")
                         it.printStackTrace()
                     }
+            }
+
+            override fun onInvite(account: Account) {
+                val uri: Uri = Uri.parse("smsto:${account.profile.phoneNo}")
+                val intent = Intent(Intent.ACTION_SENDTO, uri)
+                intent.putExtra("sms_body",inviteMessage)
+                startActivity(intent)
             }
 
         })

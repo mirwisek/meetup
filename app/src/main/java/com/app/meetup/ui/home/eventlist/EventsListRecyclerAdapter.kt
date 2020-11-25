@@ -1,5 +1,6 @@
 package com.app.meetup.ui.home.eventlist
 
+import android.R.attr.*
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
@@ -7,14 +8,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.app.meetup.R
 import com.app.meetup.ui.home.combineFormat
 import com.app.meetup.ui.home.models.Event
 import com.app.meetup.utils.log
+import com.app.meetup.utils.toPx
 import com.google.android.material.button.MaterialButton
-import java.lang.Exception
+
 
 class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsListRecyclerAdapter.ViewHolder>() {
 
@@ -22,6 +26,13 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
     private val ctx: Context = context
     private var clickListener: OnItemClickListener? = null
 
+
+    private val dpX = ctx.toPx(100)
+    private val dpDefault = ctx.toPx(10)
+    private val params = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.WRAP_CONTENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
@@ -38,11 +49,15 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
 
         val event = list!![position]
 
-        // Set extra top padding for First item
-//        if(position == 0) {
-//            val dpX = ctx.toPx(10)
-//            holder.container.setPadding(0, dpX, 0, dpX)
-//        }
+        // Set extra top padding for Last item blocked by FAB
+
+        if(position == list?.size?.minus(1)) {
+            params.setMargins(dpDefault, dpDefault, dpDefault, dpX)
+        } else {
+            params.setMargins(dpDefault, dpDefault, dpDefault, 0)
+        }
+
+        holder.container.layoutParams = params
 
         holder.eventTitle.text = event.eventTitle
         holder.locationName.text = event.selectedVenue.locationName
@@ -63,7 +78,6 @@ class EventsListRecyclerAdapter(context: Context): RecyclerView.Adapter<EventsLi
                     holder.itemView.alpha = 1F
                 }, 1000)
             } catch (e: Exception) {
-
                 log("Handler exception in enabling delete")
             }
         }

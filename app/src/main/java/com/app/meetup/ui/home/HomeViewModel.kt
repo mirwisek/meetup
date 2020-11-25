@@ -20,7 +20,15 @@ class HomeViewModel : ViewModel() {
 
     val currentProfile = repo.currentProfile
 
-    val events = repo.events
+    val eventsResult = repo.events
+
+    val events = Transformations.map(repo.events) { result ->
+        result.fold(onSuccess = {
+            it
+        }, onFailure = {
+            mutableListOf()
+        })
+    }
 
     val currentEventTitle = MutableLiveData<String>()
 

@@ -46,10 +46,11 @@ class FriendsListRecyclerAdapter(context: Context): RecyclerView.Adapter<Friends
         holder.btnReaction.text = if(account.isFriend)
             ctx.getString(R.string.unfriend)
         else {
-            if(account.isRequestSent)
-                ctx.getString(R.string.cancel_request)
-            else
-                ctx.getString(R.string.add_friend)
+            when {
+                account.isRequestSent -> ctx.getString(R.string.cancel_request)
+                account.hasSentFriendRequest -> ctx.getString(R.string.add_friend)
+                else -> "Invite"
+            }
         }
 
 
@@ -59,8 +60,10 @@ class FriendsListRecyclerAdapter(context: Context): RecyclerView.Adapter<Friends
             else {
                 if(account.isRequestSent)
                     reqReactionListener?.onRequestCancelled(account, position)
-                else
+                else if(account.hasSentFriendRequest)
                     friendReactionListener?.onAddedFriend(account, position)
+                else
+                    friendReactionListener?.onInvite(account)
             }
 
         }
@@ -89,6 +92,7 @@ class FriendsListRecyclerAdapter(context: Context): RecyclerView.Adapter<Friends
     interface OnFriendReaction {
         fun onAddedFriend(account: Account, index: Int)
         fun onUnfriend(account: Account, index: Int)
+        fun onInvite(account: Account)
     }
 
     interface OnRequestReaction {

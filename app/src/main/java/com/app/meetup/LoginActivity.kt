@@ -29,6 +29,7 @@ class LoginActivity : AppCompatActivity() {
             AuthUI.IdpConfig.PhoneBuilder().build()
         )
 
+
         // Create and launch sign-in intent
         btnLogin.setOnClickListener {
             startActivityForResult(
@@ -48,6 +49,8 @@ class LoginActivity : AppCompatActivity() {
 
         if (requestCode == RC_SIGN_IN) {
             val response = IdpResponse.fromResultIntent(data)
+
+
 
             if (resultCode == Activity.RESULT_OK && response != null) {
                 // Successfully signed in

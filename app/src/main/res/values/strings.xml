@@ -15,4 +15,6 @@
     <string name="no_events">No events to show</string>
     <string name="error_events">Server error fetching events</string>
     <string name="title_logout">Log out</string>
+    <string name="events_load_error">Couldn\'t load list, server error</string>
+    <string name="default_invite_msg">"You have been invited to Meetup - Android App \n\nhttps://www.google.com"</string>
 </resources>

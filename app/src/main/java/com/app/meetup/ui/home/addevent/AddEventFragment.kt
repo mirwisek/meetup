@@ -19,7 +19,6 @@ import com.app.meetup.ui.home.getFormatted
 import com.app.meetup.ui.home.models.FirestoreEvent
 import com.app.meetup.ui.home.models.FirestoreVote
 import com.app.meetup.ui.home.models.Venue
-import com.app.meetup.ui.home.models.Vote
 import com.app.meetup.ui.home.toGeoPoint
 import com.app.meetup.ui.home.toTimestamp
 import com.app.meetup.utils.*
@@ -83,8 +82,10 @@ class AddEventFragment : Fragment() {
 
         view.btnConfirm.isEnabled = false
 
+        log("Active event ID = $eventId")
         if (eventId == null) {
             // Add event Mode
+
 
             vmBottomSheet.friends.observe(viewLifecycleOwner, { list ->
                 list?.let { profiles ->
@@ -205,69 +206,80 @@ class AddEventFragment : Fragment() {
             vmHome.events.observe(viewLifecycleOwner) { _events ->
                 _events?.let { events ->
 
-                    val event = events.first { e -> e.id == eventId }
+                    log("Event searching for ${events.map { it.id }}")
 
-                    view.btnEndTime.disable()
-                    view.btnStartTime.disable()
-                    view.btnInvitePeople.disable()
+                    val event = events.firstOrNull { e -> e.id == eventId }
+
+                    if(event != null) {
+
+                        view.btnEndTime.disable()
+                        view.btnStartTime.disable()
+                        view.btnInvitePeople.disable()
 
 
-                    view.btnEndTime.text = event.endTime.getFormatted()
-                    view.btnStartTime.text = event.startTime.getFormatted()
+                        view.btnEndTime.text = event.endTime.getFormatted()
+                        view.btnStartTime.text = event.startTime.getFormatted()
 
-                    view.btnInvitePeople.text = "INVITED CONTACTS (${event.invites.size})"
+                        view.btnInvitePeople.text = "INVITED CONTACTS (${event.invites.size})"
 
-                    btnConfirm.setOnClickListener {
-                        val intent = Intent()
+                        btnConfirm.setOnClickListener {
+                            val intent = Intent()
 
-                        val indexOfVenueToDelete = event.venues.indexOfFirst { v ->
-                            v.addedBy == userPhone
-                        }
-                        // Delete any venue if added by this user previously
-                        event.venues.removeAt(indexOfVenueToDelete)
-                        // Add the new venue
-                        event.venues.add(venue!!)
+                            val indexOfVenueToDelete = event.venues.indexOfFirst { v ->
+                                v.addedBy == userPhone
+                            }
+                            // Delete any venue if added by this user previously
+                            if(indexOfVenueToDelete != -1) {
+                                event.venues.removeAt(indexOfVenueToDelete)
+                            }
+                            // Add the new venue
+                            event.venues.add(venue!!)
 
-                        var newVotes: MutableList<FirestoreVote> = mutableListOf()
+                            var newVotes: MutableList<FirestoreVote> = mutableListOf()
 
-                        vmHome.currentProfile.value?.let { currentProfile ->
-                            // Remove currentUser from all other voters Set and add it to clicked item
-                            event.votes.forEachIndexed { i, v ->
-                                val index = v.voters.indexOfFirst { p -> p.phoneNo == userPhone }
+                            vmHome.currentProfile.value?.let { currentProfile ->
+                                // Remove currentUser from all other voters Set and add it to clicked item
+//                                event.votes.forEachIndexed { i, v ->
+//                                    val index = v.voters.indexOfFirst { p -> p.phoneNo == userPhone }
+//
+//                                    if (index != -1 && index == i)
+//                                        event.votes[i].voters.remove(currentProfile)
+//                                }
 
-                                if (index == i)
-                                    event.votes[i].voters.remove(currentProfile)
+                                newVotes = event.votes.mapNotNull { v ->
+                                    v.voters.remove(currentProfile)
+                                    val votersList = v.voters.map { p -> p.phoneNo }
+                                    // Since user changed his vote, check votes list and remove empty lists
+                                    if(votersList.isEmpty())
+                                        null
+                                    else
+                                        FirestoreVote(v.placeId, votersList.toMutableList())
+                                }.toMutableList()
+
+
+                                newVotes.add(FirestoreVote(venue!!.id, mutableListOf(currentProfile.phoneNo)))
+
                             }
 
-                            newVotes = event.votes.mapNotNull { v ->
-                                v.voters.remove(currentProfile)
-                                val votersList = v.voters.map { p -> p.phoneNo }
-                                // Since user changed his vote, check votes list and remove empty lists
-                                if(votersList.isEmpty())
-                                    null
-                                else
-                                    FirestoreVote(v.placeId, votersList.toMutableList())
-                            }.toMutableList()
+                            newVotes.sortByDescending { fv -> fv.voters.size }
+                            val selectedVenue = newVotes.firstOrNull()?.placeId
 
+                            if(selectedVenue == null)
+                                toastFrag("Selected veneue null, try again")
+                            else {
+                                FirestoreUtils.updateVenue(
+                                    eventId!!, userPhone, event.venues, selectedVenue, newVotes
+                                ).addOnFailureListener {
 
-                            newVotes.add(FirestoreVote(venue!!.id, mutableListOf(currentProfile.phoneNo)))
+                                    toastFrag("Couldn't update your event, server error!")
+                                    it.printStackTrace()
 
-                        }
-
-                        newVotes.sortByDescending { fv -> fv.voters.size }
-                        val selectedVenue = newVotes.first().placeId
-
-                        FirestoreUtils.updateVenue(
-                            eventId!!, userPhone, event.venues, selectedVenue!!, newVotes
-                        ).addOnFailureListener {
-
-                            toastFrag("Couldn't update your event, server error!")
-                            it.printStackTrace()
-
-                        }.addOnSuccessListener {
-                            requireActivity().apply {
-                                setResult(Activity.RESULT_OK, intent)
-                                finish()
+                                }.addOnSuccessListener {
+                                    requireActivity().apply {
+                                        setResult(Activity.RESULT_OK, intent)
+                                        finish()
+                                    }
+                                }
                             }
                         }
                     }

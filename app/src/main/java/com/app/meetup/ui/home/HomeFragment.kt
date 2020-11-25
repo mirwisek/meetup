@@ -17,7 +17,6 @@ import androidx.navigation.fragment.findNavController
 import com.app.meetup.ActivityViewModel
 import com.app.meetup.MainActivity
 import com.app.meetup.R
-import com.app.meetup.repo.Repository
 import com.app.meetup.ui.home.addevent.MapsActivity
 import com.app.meetup.ui.home.eventlist.EditEventFragment
 import com.app.meetup.ui.home.eventlist.EventsListRecyclerAdapter
@@ -28,6 +27,7 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import kotlinx.android.synthetic.main.fragment_home.view.*
+import java.lang.RuntimeException
 
 class HomeFragment : Fragment() {
 
@@ -74,39 +74,35 @@ class HomeFragment : Fragment() {
                     toastFrag("Couldn't delete event, please try again later")
                     it.printStackTrace()
                 }.addOnSuccessListener {
-                    vmHome.events.value!!.remove(event)
-                    Repository.getInstance().updateEventsFromUI(vmHome.events.value!!)
+//                    vmHome.events.value!!.remove(event)
+//                    Repository.getInstance().updateEventsFromUI(vmHome.events.value!!)
                     toastFrag("Event delete and invited guests notified")
                 }
             }
 
         })
 
-        vmHome.events.observe(viewLifecycleOwner, {
-            it?.let { list ->
-                view.progressHome.gone()
-                if(list.isEmpty()) {
+        vmHome.events.observe(viewLifecycleOwner) {
+            adapter.updateList(it)
+        }
+
+        vmHome.eventsResult.observe(viewLifecycleOwner, { result ->
+
+            view.progressHome.gone()
+
+            result.fold(onSuccess = { list ->
+                if (list.isEmpty()) {
                     view.placeHolder.text = getString(R.string.no_events)
                     view.placeHolder.visible()
                 } else {
                     view.placeHolder.gone()
-                    adapter.updateList(list)
                 }
-            }
+            }, onFailure = {
+                view.placeHolder.text = getString(R.string.events_load_error)
+                view.placeHolder.visible()
+                it.printStackTrace()
+            })
         })
-
-        vmHome.errors.observe(viewLifecycleOwner) {
-            it?.let { map ->
-                log("maps $map")
-                map[Constants.EVENTS]?.let { value ->
-                    if(value) {
-                        view.placeHolder.text = getString(R.string.error_events)
-                        view.placeHolder.visible()
-                        view.placeHolder.gone()
-                    }
-                }
-            }
-        }
 
         view.fabAdd.setOnClickListener {
             if (hasLocationPermission()) {

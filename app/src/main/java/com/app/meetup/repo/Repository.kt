@@ -8,6 +8,7 @@ import com.app.meetup.Profile
 import com.app.meetup.UserData
 import com.app.meetup.ui.home.models.Event
 import com.app.meetup.ui.home.models.FirestoreEvent
+import com.app.meetup.ui.home.models.InviteMessage
 import com.app.meetup.ui.notifications.models.Notification
 import com.app.meetup.ui.notifications.models.NotificationsList
 import com.app.meetup.utils.*
@@ -17,10 +18,11 @@ import kotlin.coroutines.CoroutineContext
 
 class Repository private constructor() : CoroutineScope {
 
+    val inviteTemplate = MutableLiveData<InviteMessage>()
     val userData = MutableLiveData<UserData>()
     val profiles = MutableLiveData<MutableList<Profile>>()
     val currentProfile = MutableLiveData<Profile>()
-    val events = MutableLiveData<MutableList<Event>>()
+    val events = MutableLiveData<Result<MutableList<Event>>>()
     val notifications = MutableLiveData<NotificationsList>()
 
     var errors = MutableLiveData<HashMap<String, Boolean>>().apply {
@@ -30,6 +32,7 @@ class Repository private constructor() : CoroutineScope {
     var empty = MutableLiveData<HashMap<String, Boolean>>().apply {
         postValue(hashMapOf())
     }
+
 
     val friends = userData.combineProfilesWithFriends(profiles) { profilesList, userData ->
 
@@ -48,6 +51,7 @@ class Repository private constructor() : CoroutineScope {
         fetchData()
         fetchProfiles()
         fetchNotifications()
+        fetchInviteTemplate()
     }
 
     companion object {
@@ -68,7 +72,7 @@ class Repository private constructor() : CoroutineScope {
     }
 
     fun updateEventsFromUI(e: MutableList<Event>) {
-        events.postValue(e)
+        events.postValue(Result.success(e))
     }
 
     private fun fetchData() {
@@ -77,9 +81,8 @@ class Repository private constructor() : CoroutineScope {
 
         FirestoreUtils.getUserData(phoneNo!!).addSnapshotListener { snap, ex ->
             scope.launch {
-                ex?.let {
-                    it.printStackTrace()
-                    errors.value!![Constants.USERDATA] = true
+                ex?.let { e ->
+                    events.postValue(Result.failure(e))
                 }
 
                 snap?.let { doc ->
@@ -92,15 +95,27 @@ class Repository private constructor() : CoroutineScope {
 
                         if(data == null) {
                             empty.value!![Constants.USERDATA] = true
-                            events.postValue(mutableListOf())
+                            events.postValue(Result.success(mutableListOf()))
                         } else
                             fetchEvents(data)
                     } catch (e: Exception) {
-                        errors.value!![Constants.USERDATA] = true
-                        e.printStackTrace()
+                        events.postValue(Result.failure(e))
                     }
                 }
             }
+        }
+    }
+
+    private fun fetchInviteTemplate() {
+        FirestoreUtils.getInviteTemplate().get().addOnSuccessListener { snap ->
+            scope.launch {
+                if(snap != null) {
+                    val message = snap.toObject(InviteMessage::class.java)
+                    inviteTemplate.postValue(message)
+                }
+            }
+        }.addOnFailureListener {
+            inviteTemplate.postValue(InviteMessage("https://www.google.com", "You have been invited to Meetup Android"))
         }
     }
 
@@ -119,14 +134,10 @@ class Repository private constructor() : CoroutineScope {
                     try {
                         val _profiles = doc.toObjects(Profile::class.java)
                         profiles.postValue(_profiles)
-                        var cProfile: Profile? = null
-                        try {
-                            cProfile = _profiles.first { p ->
-                                p.phoneNo == phoneNo
-                            }
-                        } catch (e: NoSuchElementException) {
-                            // do nothing
+                        val cProfile = _profiles.firstOrNull { p ->
+                            p.phoneNo == phoneNo
                         }
+                        log("Fetched profile from server $cProfile")
                         currentProfile.postValue(cProfile)
                     } catch (e: Exception) {
                         errors.value!![Constants.PROFILES] = true
@@ -147,8 +158,7 @@ class Repository private constructor() : CoroutineScope {
         }
 
         if(mergedList.isEmpty()) {
-            log("Events lsit is empty")
-            events.postValue(mutableListOf())
+            events.postValue(Result.success(mutableListOf()))
             return
         }
         // Woulnd't update items instantly
@@ -181,10 +191,8 @@ class Repository private constructor() : CoroutineScope {
 
                 try {
 
-                    ex?.let {
-                        it.printStackTrace()
-                        errors.value!![Constants.EVENTS] = true
-                        events.postValue(mutableListOf())
+                    ex?.let { e ->
+                        events.postValue(Result.failure(e))
                     }
 
                     var firestoreEvents = mutableListOf<FirestoreEvent>()
@@ -201,9 +209,10 @@ class Repository private constructor() : CoroutineScope {
                         firestoreEvents, profiles.value!!
                     )
                     log("New events ${newEvents}")
-                    events.postValue(newEvents.toMutableList())
+                    events.postValue(Result.success(newEvents.toMutableList()))
+
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    events.postValue(Result.failure(e))
                 }
             }
         }
